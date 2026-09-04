@@ -51,8 +51,14 @@ function buildSystemPrompt(storeName: string, cells: Cell[], decisions: Decision
     ? pending.map((d) => `- ${d.title} (الأثر المتوقع: ${d.impactLabel}، نسبة الثقة: ${d.confidence}%)`).join("\n")
     : "لا توجد قرارات معلّقة بانتظار الموافقة حالياً.";
 
-  const focusNote = focusSlugs.length
-    ? `\nالتاجر اختار التركيز خصوصاً على هذه الخلايا في هذا الاجتماع: ${focusSlugs.join("، ")}.`
+  // focusSlugs is only a meaningful signal when it's a genuine, deliberate
+  // subset of the cells. The meeting room defaults every cell to "present",
+  // so a full-attendance list (or an empty one) is not the merchant singling
+  // anything out — treating it as such was causing the AI to invent that the
+  // merchant's question was about a specific cell/product when it wasn't.
+  const isRealNarrowing = focusSlugs.length > 0 && focusSlugs.length < cells.length;
+  const focusNote = isRealNarrowing
+    ? `\nالتاجر ضيّق التركيز خصوصاً على هذه الخلايا في هذا الاجتماع (بإزالة البقية من الحضور): ${focusSlugs.join("، ")}. هذا لا يعني أن سؤاله يتحدث عنها تلقائياً — استخدم هذا فقط كمرشّح لو كان السؤال بالفعل يخص إحداها.`
     : "";
 
   return [
@@ -61,9 +67,10 @@ function buildSystemPrompt(storeName: string, cells: Cell[], decisions: Decision
     ``,
     `قواعد صارمة لا تخرج عنها أبداً:`,
     `1. لا تختلق أرقاماً أو حقائق غير موجودة في البيانات المُعطاة لك أدناه. إذا سُئلت عن خلية ليس لها بيانات حقيقية مرتبطة، صرّح بوضوح أن بياناتها الفعلية غير مربوطة بعد، ولا تخترع أرقاماً بديلة.`,
-    `2. كن مختصراً ومباشراً — فقرة أو فقرتين كحد أقصى، بلا مقدمات طويلة أو حشو.`,
-    `3. إن وُجدت توصية عملية واضحة مبنية على البيانات الحقيقية المتوفرة، اذكرها صراحةً.`,
-    `4. تحدث بثقة ومهنية كقائد فريق حقيقي، لا كروبوت يكرر نفس الصياغات.`,
+    `2. لا تفترض أو تخترع تفاصيل لم يذكرها التاجر صراحةً في نص سؤاله — مثل ربط سؤاله بمنتج أو خلية أو حملة معيّنة لم يسمّها. إذا كان السؤال عاماً أو غامضاً (مثل: "هل أطلق حملة خصم؟" بلا تحديد أي منتج)، أجب بشكل عام مبني على الصورة الكلية للبيانات المتوفرة، أو اسأل التاجر عن التوضيح المطلوب (مثل: أي منتج أو خلية يقصد) بدل أن تفترض إجابة كأن السؤال كان محدداً.`,
+    `3. كن مختصراً ومباشراً — فقرة أو فقرتين كحد أقصى، بلا مقدمات طويلة أو حشو.`,
+    `4. إن وُجدت توصية عملية واضحة مبنية على البيانات الحقيقية المتوفرة، اذكرها صراحةً — لكن فقط عندما ترتبط فعلاً بما سأل عنه التاجر.`,
+    `5. تحدث بثقة ومهنية كقائد فريق حقيقي، لا كروبوت يكرر نفس الصياغات.`,
     ``,
     `بيانات الخلايا الحالية:`,
     cellLines,
