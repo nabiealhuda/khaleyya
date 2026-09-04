@@ -5,7 +5,13 @@ FROM node:20-slim AS deps
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json* ./
-RUN npm install --legacy-peer-deps
+# --ignore-scripts skips package.json's "postinstall": "prisma generate" here.
+# That step needs its own network fetch for Prisma's engine binary, and
+# running it a second time (redundantly) inside this stage — on top of the
+# explicit `prisma generate` already run in the builder stage below — only
+# doubles the chance of a slow/hung network fetch derailing the build with no
+# clear indication of which of the two identical steps actually stalled.
+RUN npm install --legacy-peer-deps --ignore-scripts
 
 # ---- builder: generate Prisma client + compile Next.js ----
 FROM node:20-slim AS builder
@@ -17,6 +23,10 @@ COPY . .
 # client generated (schema-aware types), it never opens a real connection.
 ENV DATABASE_URL="postgresql://user:password@localhost:5432/db"
 ENV SESSION_SECRET="build-time-placeholder-secret-not-used-at-runtime-000000"
+# Disables Prisma's telemetry/update-check ping — an unrelated network call
+# that has, in some CI/container environments, been slow enough to make a
+# generate step that should take seconds look stuck.
+ENV CHECKPOINT_DISABLE=1
 RUN npx prisma generate
 RUN npm run build
 
