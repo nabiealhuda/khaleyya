@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 import { logger } from "../logger";
 import { odooExecuteKw, OdooConfig } from "./odoo-client";
+import { askClaude, AiNotConfiguredError, AiRequestError } from "../ai";
 
 /**
  * Pulls real data from a connected Odoo instance and overwrites the KPIs,
@@ -20,9 +21,12 @@ import { odooExecuteKw, OdooConfig } from "./odoo-client";
  *    search_count / read_group rather than fetching every record and
  *    summing client-side, so this stays fast and bounded regardless of
  *    store size.
- *  - Only real numbers go into KPIs/insight text — no fabricated analysis.
- *    The insight strings are plainly-worded factual summaries of the pulled
- *    numbers, not AI-generated commentary.
+ *  - KPI numbers are always the real, deterministically-computed Odoo
+ *    aggregates — never AI output. The insight sentence is then handed to
+ *    Claude (see aiInsight() below) to turn into a short, genuinely-written
+ *    analytical note grounded strictly in those same numbers; if the AI
+ *    isn't configured or the call fails, the plain factual template sentence
+ *    is used instead — a sync must never fail or stall over this.
  */
 
 export type CellSyncOutcome = { slug: string; cellName: string; ok: boolean; message: string };
@@ -209,6 +213,32 @@ async function syncCustomers(cfg: OdooConfig, uid: number): Promise<CellUpdate> 
   };
 }
 
+/**
+ * Upgrades the plain factual template sentence (e.g. "3 products are out of
+ * stock, out of 40 total") into a short, genuinely-written analytical note
+ * — same real numbers, an actual model reasoning about what they mean and
+ * what to do about them, instead of a fixed sentence shape. Best-effort: if
+ * the AI isn't configured (no ANTHROPIC_API_KEY yet) or the call fails for
+ * any reason, this quietly falls back to the factual template so a sync
+ * never breaks or stalls over it.
+ */
+async function aiInsight(cellName: string, factualInsight: string, kpis: CellUpdate["kpis"]): Promise<string> {
+  try {
+    const kpiLines = kpis.map((k) => `- ${k.label}: ${k.value}`).join("\n");
+    return await askClaude({
+      system:
+        "أنت محلل بيانات تجاري تكتب ملاحظة تحليلية قصيرة وصادقة بالعربية الفصحى المبسطة، بناءً فقط على الأرقام الحقيقية المُعطاة لك أدناه. لا تخترع أي رقم أو حقيقة غير مذكورة. جملتان كحد أقصى. اكتب الملاحظة مباشرة (بدون مقدمات مثل \"بناءً على البيانات\")، وإن أمكن اقترح إجراءً عملياً واحداً واضحاً.",
+      userMessage: `الخلية: ${cellName}\nالأرقام الحقيقية من أودو:\n${kpiLines}`,
+      maxTokens: 220,
+    });
+  } catch (err) {
+    if (err instanceof AiNotConfiguredError || err instanceof AiRequestError) {
+      return factualInsight;
+    }
+    throw err;
+  }
+}
+
 const CELL_SYNCERS: Record<string, (cfg: OdooConfig, uid: number) => Promise<CellUpdate>> = {
   inventory: syncInventory,
   pricing: syncSalesOrders,
@@ -231,6 +261,7 @@ export async function syncOdooCells(storeId: string, cfg: OdooConfig, uid: numbe
 
     try {
       const update = await syncFn(cfg, uid);
+      const insight = await aiInsight(cell.name, update.insight, update.kpis);
       const existingSources = Array.isArray(cell.sources) ? (cell.sources as unknown[]) : [];
       const sources = existingSources.includes("أودو") ? existingSources : [...existingSources, "أودو"];
 
@@ -240,7 +271,7 @@ export async function syncOdooCells(storeId: string, cfg: OdooConfig, uid: numbe
           data: {
             kpis: update.kpis as never,
             chart: update.chart as never,
-            insight: update.insight,
+            insight,
             sources: sources as never,
           },
         }),

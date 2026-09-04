@@ -1093,10 +1093,12 @@ function renderOverview(){
 }
 
 /* ---------------- صفحة: قائد الخلية ---------------- */
+/* أسئلة مقترحة فقط — الردود أصبحت من الذكاء الاصطناعي الحقيقي عبر
+   POST /api/leader/chat (انظر askLeader/askLeaderInline) بدل إجابات جاهزة. */
 const LEADER_QA = [
-  {q:'ما الأولوية اليوم؟', a:'الأولوية المقترحة هي معالجة سرعة صفحة الدفع على الجوال، لأن أثرها يشمل جميع مصادر المبيعات وليس قناة واحدة فقط.'},
-  {q:'هل هناك تعارض بين الخلايا؟', a:'نعم، خلية الإعلان والتسويق تقترح زيادة ميزانية حملة «العناية بالبشرة» بنسبة 25% بناءً على أداء واعد، بينما ترى خلية جودة القرار والأثر أن البيانات المتوفرة أسبوع واحد فقط وغير كافية لاتخاذ قرار بثقة. المقترح: الانتظار حتى اكتمال 14 يوماً من البيانات قبل رفع الميزانية.'},
-  {q:'كم قراراً ينتظر موافقتي؟', a:'هناك ' + DECISIONS.filter(d=>d.status==='ينتظر الموافقة').length + ' قرارات تنتظر موافقتك حالياً، أبرزها إعادة طلب مخزون سيروم فيتامين C لأنه الأعلى تأثيراً على المبيعات.'},
+  'ما الأولوية اليوم؟',
+  'هل هناك تعارض بين الخلايا؟',
+  'كم قراراً ينتظر موافقتي؟',
 ];
 function renderLeader(){
   const ranked = [...DECISIONS].filter(d=>d.status==='ينتظر الموافقة').sort((a,b)=> (b.confidence*Math.abs(b.impact||1)) - (a.confidence*Math.abs(a.impact||1)) ).slice(0,6);
@@ -1153,36 +1155,54 @@ function renderLeader(){
       <div class="section-title"><span>اسأل قائد الخلية</span></div>
       <div id="leaderChat" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px"></div>
       <div style="display:flex;flex-wrap:wrap;gap:8px">
-        ${LEADER_QA.map((qa,i)=>`<button class="tab" onclick="askLeader(${i})">${qa.q}</button>`).join('')}
+        ${LEADER_QA.map((q,i)=>`<button class="tab" onclick="askLeader(${i})">${q}</button>`).join('')}
       </div>
     </div>
   `;
 }
+function leaderTypingHtml(id){
+  return `<div id="${id}" style="align-self:flex-start;max-width:85%;display:flex;gap:8px">
+    <div class="avatar-cell" style="width:26px;height:26px;flex:0 0 26px;background:var(--accent-soft);color:var(--accent-strong)">${icon('captain')}</div>
+    <div style="background:var(--accent-tint);border-radius:12px 12px 12px 3px;padding:9px 13px;font-size:13px;color:var(--muted)">قائد الخلية يكتب…</div>
+  </div>`;
+}
+function leaderReplyHtml(text, isError){
+  return `<div style="align-self:flex-start;max-width:85%;display:flex;gap:8px">
+    <div class="avatar-cell" style="width:26px;height:26px;flex:0 0 26px;background:var(--accent-soft);color:var(--accent-strong)">${icon('captain')}</div>
+    <div style="background:var(--accent-tint);border-radius:12px 12px 12px 3px;padding:9px 13px;font-size:13px;line-height:1.9;${isError?'color:var(--risk-strong)':''}">${escapeHtml(text)}</div>
+  </div>`;
+}
 function askLeader(i){
-  const qa = LEADER_QA[i];
+  const q = LEADER_QA[i];
   const box = document.getElementById('leaderChat');
+  const typingId = 'leaderTyping-'+Date.now();
   box.insertAdjacentHTML('beforeend', `
-    <div style="align-self:flex-start;max-width:80%;background:var(--surface-2);border-radius:12px 12px 12px 3px;padding:9px 13px;font-size:13px">${qa.q}</div>
-    <div style="align-self:flex-start;max-width:85%;display:flex;gap:8px">
-      <div class="avatar-cell" style="width:26px;height:26px;flex:0 0 26px;background:var(--accent-soft);color:var(--accent-strong)">${icon('captain')}</div>
-      <div style="background:var(--accent-tint);border-radius:12px 12px 12px 3px;padding:9px 13px;font-size:13px;line-height:1.9">${qa.a}</div>
-    </div>`);
+    <div style="align-self:flex-start;max-width:80%;background:var(--surface-2);border-radius:12px 12px 12px 3px;padding:9px 13px;font-size:13px">${q}</div>` + leaderTypingHtml(typingId));
+  api('/api/leader/chat', {method:'POST', body:{text:q, focusCellSlugs:[]}})
+    .then(res=>{ document.getElementById(typingId)?.remove(); box.insertAdjacentHTML('beforeend', leaderReplyHtml(res.message.text)); })
+    .catch(err=>{
+      document.getElementById(typingId)?.remove();
+      box.insertAdjacentHTML('beforeend', leaderReplyHtml((err && err.data && err.data.error) || 'تعذّر الحصول على رد — حاول مرة أخرى.', true));
+    });
 }
 function askLeaderInline(id, i){
-  const qa = LEADER_QA[i];
+  const q = LEADER_QA[i];
   const box = document.getElementById('qaInline-'+id);
   if(!box) return;
+  const typingId = 'leaderTypingInline-'+Date.now();
   box.insertAdjacentHTML('beforeend', `
-    <div style="align-self:flex-start;max-width:80%;background:var(--surface-2);border-radius:12px 12px 12px 3px;padding:9px 13px;font-size:13px">${qa.q}</div>
-    <div style="align-self:flex-start;max-width:85%;display:flex;gap:8px">
-      <div class="avatar-cell" style="width:26px;height:26px;flex:0 0 26px;background:var(--accent-soft);color:var(--accent-strong)">${icon('captain')}</div>
-      <div style="background:var(--accent-tint);border-radius:12px 12px 12px 3px;padding:9px 13px;font-size:13px;line-height:1.9">${qa.a}</div>
-    </div>`);
+    <div style="align-self:flex-start;max-width:80%;background:var(--surface-2);border-radius:12px 12px 12px 3px;padding:9px 13px;font-size:13px">${q}</div>` + leaderTypingHtml(typingId));
   box.style.display = 'flex';
   box.classList.remove('qa-flash');
   void box.offsetWidth;
   box.classList.add('qa-flash');
   box.scrollIntoView({behavior:'smooth', block:'nearest'});
+  api('/api/leader/chat', {method:'POST', body:{text:q, focusCellSlugs:[id]}})
+    .then(res=>{ document.getElementById(typingId)?.remove(); box.insertAdjacentHTML('beforeend', leaderReplyHtml(res.message.text)); })
+    .catch(err=>{
+      document.getElementById(typingId)?.remove();
+      box.insertAdjacentHTML('beforeend', leaderReplyHtml((err && err.data && err.data.error) || 'تعذّر الحصول على رد — حاول مرة أخرى.', true));
+    });
 }
 function askLeaderQuickBlock(id){
   return `
@@ -1190,7 +1210,7 @@ function askLeaderQuickBlock(id){
     <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px">${icon('captain')} اسأل قائد الخلية</div>
     <div id="qaInline-${id}" style="display:none;flex-direction:column;gap:8px;margin-bottom:10px;border-radius:12px"></div>
     <div style="display:flex;flex-wrap:wrap;gap:6px">
-      ${LEADER_QA.map((qa,i)=>`<button class="tab" style="font-size:11px;padding:6px 10px" onclick="askLeaderInline('${id}',${i})">${qa.q}</button>`).join('')}
+      ${LEADER_QA.map((q,i)=>`<button class="tab" style="font-size:11px;padding:6px 10px" onclick="askLeaderInline('${id}',${i})">${q}</button>`).join('')}
     </div>
   `;
 }
@@ -1340,18 +1360,6 @@ function openCouncilVoteDetails(){
 }
 
 /* ---------------- صفحة: غرفة الاجتماعات ---------------- */
-const MEETING_TOPIC_KEYWORDS = {
-  profit: ['ربح','ربحية','هامش','تكلفة','مصروف'],
-  inventory: ['مخزون','مخزن','نفاد','تخزين','كمية','مستودع','توريد','راكد','تكدس'],
-  pricing: ['سعر','أسعار','تسعير','خصم','تخفيض'],
-  quality: ['قرار','ثقة','تعارض بين'],
-  customers: ['عميل','عملاء','ولاء','شكو','رضا','استرداد'],
-  competitors: ['منافس','منافسين','سوق','مقارنة'],
-  ads: ['إعلان','إعلانات','حملة','تسويق','ميزانية'],
-  pulse: ['نبض','صحة الموقع','أداء عام','سرعة الموقع'],
-  purchasing: ['شراء','مشتريات','مورد','موردين','منتج جديد','باقة'],
-  devQuality: ['تطوير','خطأ تقني','أخطاء','اختبار','تحسين تقني'],
-};
 const MEETING_QUICK_TOPICS = [
   'هل نخفض سعر تشكيلة الشتاء الراكدة؟',
   'هل يوجد منافس أضاف ميزة تستحق المتابعة؟',
@@ -1396,23 +1404,14 @@ function meetingBubble(msg){
     </div>
   </div>`;
 }
-function meetingRespond(text){
-  const p = STATE.meeting.participants;
-  const matched = CELLS.filter(c=> p[c.id] && (MEETING_TOPIC_KEYWORDS[c.id]||[]).some(k=>text.includes(k))).slice(0,3);
-  const msgs = [];
-  if(matched.length){
-    msgs.push({who:'leader', text:`موضوع وجيه، دعني أنسّق الرد مع ${matched.map(c=>'خلية '+c.name).join('، ')}.`});
-    matched.forEach(c=> msgs.push({who:c.id, text:c.insight}));
-    msgs.push({who:'leader', text:`الخلاصة: بالتنسيق مع ${matched.map(c=>c.name).join('، ')}، أقترح دراسة هذا الموضوع كقرار رسمي عبر المجلس الاستشاري، أو يمكنني إضافته مباشرة إلى قائمة القرارات المعلّقة إن أردت.`});
-  } else {
-    msgs.push({who:'leader', text:'وصلني موضوعك. لا توجد حالياً خلية مفعّلة في هذا الاجتماع لديها بيانات مباشرة عنه، لكن يمكنني تكوين رأي مبدئي بناءً على الصورة العامة للمتجر إن رغبت، أو فعّل خلية معينة من قائمة الأعضاء أعلاه وسأطلب رأيها مباشرة.'});
-  }
-  return msgs;
-}
-function persistMeetingMessage(msg){
-  const role = msg.who==='user' ? 'MERCHANT' : msg.who==='leader' ? 'LEADER' : 'CELL';
-  const cellSlug = role==='CELL' ? msg.who : undefined;
-  api('/api/meeting/messages', {method:'POST', body:{role, cellSlug, text:msg.text}}).catch(()=>{});
+/* قائد الخلية أصبح ذكاءً اصطناعياً حقيقياً (POST /api/leader/chat) بدل مطابقة
+   كلمات مفتاحية محلية — يحفظ الخادم رسالة التاجر وردّ القائد كلاهما، فلا
+   حاجة لحفظهما من هنا. */
+function typingBubbleHtml(id){
+  return `<div id="${id}" style="align-self:flex-start;max-width:85%;display:flex;gap:8px">
+    <div class="avatar-cell" style="width:28px;height:28px;flex:0 0 28px;background:var(--accent-soft);color:var(--accent-strong)">${icon('captain')}</div>
+    <div style="background:var(--accent-tint);border-radius:3px 12px 12px 12px;padding:9px 13px;font-size:13px;color:var(--muted)">قائد الخلية يكتب…</div>
+  </div>`;
 }
 function sendMeetingMessage(preset){
   const input = document.getElementById('meetingInput');
@@ -1420,18 +1419,27 @@ function sendMeetingMessage(preset){
   if(!val) return;
   const userMsg = {who:'user', text:val};
   STATE.meeting.messages.push(userMsg);
-  persistMeetingMessage(userMsg);
   const chat = document.getElementById('meetingChat');
   if(chat){ chat.insertAdjacentHTML('beforeend', meetingBubble(userMsg)); chat.scrollTop = chat.scrollHeight; }
   if(input) input.value = '';
-  setTimeout(()=>{
-    const replies = meetingRespond(val);
-    replies.forEach(r=>{
-      STATE.meeting.messages.push(r);
-      persistMeetingMessage(r);
-      if(chat){ chat.insertAdjacentHTML('beforeend', meetingBubble(r)); chat.scrollTop = chat.scrollHeight; }
+
+  const typingId = 'typing-'+Date.now();
+  if(chat){ chat.insertAdjacentHTML('beforeend', typingBubbleHtml(typingId)); chat.scrollTop = chat.scrollHeight; }
+
+  const focusCellSlugs = CELLS.filter(c=>STATE.meeting.participants[c.id]).map(c=>c.id);
+  api('/api/leader/chat', {method:'POST', body:{text:val, focusCellSlugs}})
+    .then(res=>{
+      document.getElementById(typingId)?.remove();
+      const reply = {who:'leader', text:res.message.text};
+      STATE.meeting.messages.push(reply);
+      if(chat){ chat.insertAdjacentHTML('beforeend', meetingBubble(reply)); chat.scrollTop = chat.scrollHeight; }
+    })
+    .catch(err=>{
+      document.getElementById(typingId)?.remove();
+      const reply = {who:'leader', text:(err && err.data && err.data.error) || 'تعذّر الحصول على رد قائد الخلية — حاول مرة أخرى.'};
+      STATE.meeting.messages.push(reply);
+      if(chat){ chat.insertAdjacentHTML('beforeend', meetingBubble(reply)); chat.scrollTop = chat.scrollHeight; }
     });
-  }, 500);
 }
 let meetingRecognition = null;
 function toggleMeetingMic(){

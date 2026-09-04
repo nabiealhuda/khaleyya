@@ -16,6 +16,12 @@ const envSchema = z.object({
   // Railway injects PORT; Next's own start script reads it directly, but we
   // validate it here too so a missing/invalid PORT fails loudly in prod.
   PORT: z.string().optional(),
+  // Powers the real AI features (src/lib/ai.ts — leader chat, meeting room,
+  // AI-written cell insights). Deliberately optional rather than required:
+  // the app must still boot and serve everything else if this hasn't been
+  // set on Railway yet. Callers check for its absence themselves and return
+  // a friendly Arabic "AI not configured" error instead of crashing.
+  ANTHROPIC_API_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
