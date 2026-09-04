@@ -470,106 +470,14 @@ const COUNCIL_QUESTIONS = [
   'هل أطلق حملة خصم؟',
 ];
 
-const COUNCIL_SCENARIOS = {
-  'هل أخفض سعر هذا المنتج؟': {
-    subtitle:'مثال مطبّق على: تشكيلة الشتاء الراكدة (12 قطعة)',
-    opinions:[
-      { cellId:'pricing', stance:'يؤيد', highlight:'خصم مؤقت لا يضر السعر', text:'خفض السعر 30% معقول لتحريك مخزون راكد دون خصم دائم يضر بصورة السعر.',
-        evidence:['تاريخ تغيّر الأسعار للمنتج','حساسية العملاء للسعر في هذه الفئة'], benefits:['تحريك المخزون بسرعة أكبر'], risks:['قد يخلق توقعاً بخصومات مستقبلية'],
-        impact:6100, confidence:80, conditions:['تحديد سقف زمني للعرض (10 أيام)'], alternative:'تقديم شحن مجاني بدلاً من خفض السعر مباشرة' },
-      { cellId:'inventory', stance:'يؤيد', highlight:'مخزون راكد منذ 45 يوماً', text:'المنتجات راكدة منذ 45 يوماً وتشغل مساحة تخزين دون أي عائد، الأولوية لتحريكها.',
-        evidence:['معدل الدوران أقل من 0.3 مقابل متوسط 4.1'], benefits:['تحرير رأس مال معطل','تفريغ مساحة تخزين'], risks:['بيع الكمية بالكامل بسعر منخفض إذا زاد الطلب فجأة'],
-        impact:6100, confidence:88, conditions:[], alternative:null },
-      { cellId:'profit', stance:'محايد', highlight:'أثر محدود على الربح الكلي', text:'الأثر على الربح الكلي محدود، لكن تحرير رأس المال له قيمة تشغيلية غير مباشرة.',
-        evidence:['حجم رأس المال المجمّد في هذه القطع'], benefits:['تحسين السيولة'], risks:['هامش الربح على هذه القطع سيصبح شبه معدوم'],
-        impact:0, confidence:65, conditions:[], alternative:null },
-    ],
-    verdict:{ decision:'الموافقة على خصم 30% لمدة 10 أيام على تشكيلة الشتاء الراكدة فقط', score:81, confidence:83,
-      expectedProfit:'تحرير ~6,100 ر.س رأس مال + بيع تقديري لـ 8–10 قطع', risks:['بيع الكمية كاملة بسرعة أكبر من المتوقع دون هامش ربح يُذكر'],
-      stopCondition:'إذا لم تُبَع نصف الكمية خلال 5 أيام من بدء العرض',
-      timing:'الآن — قبل نهاية الموسم الحالي', kpis:['عدد القطع المباعة خلال 10 أيام','قيمة رأس المال المحرَّر'],
-      plan:['تفعيل الخصم على المنتجات المحددة فقط','إبرازها في صفحة العروض والبريد الإلكتروني','إيقاف الخصم تلقائياً عند نفاد الكمية أو انتهاء المدة'] } },
-
-  'هل أوقف هذا الإعلان؟': {
-    subtitle:'مثال مطبّق على: حملة «تخفيضات الصيف - إعلانات الفيديو»',
-    opinions:[
-      { cellId:'ads', stance:'يؤيد', highlight:'العائد انخفض إلى 1.1x', text:'العائد على الإنفاق انخفض من 2.6x إلى 1.1x خلال 3 أسابيع، والاستمرار يعني هدراً متواصلاً.',
-        evidence:['تقرير أداء الحملة آخر 21 يوم','تكلفة النقرة مقارنة بمتوسط الحساب'], benefits:['توفير 9,300 ر.س شهرياً'], risks:['فقدان زخم الوصول المكتسب من الحملة'],
-        impact:9300, confidence:87, conditions:[], alternative:'خفض الميزانية 50% بدل الإيقاف الكامل لمدة أسبوع تجريبي' },
-      { cellId:'profit', stance:'يؤيد', highlight:'الربح الحقيقي سالب حالياً', text:'الربح الحقيقي بعد تكلفة الإعلان سالب لهذا المنتج تحديداً منذ أسبوعين.',
-        evidence:['هامش الربح بعد خصم تكلفة الإعلان والشحن'], benefits:['وقف نزيف مالي مباشر'], risks:[],
-        impact:9300, confidence:85, conditions:[], alternative:null },
-    ],
-    verdict:{ decision:'إيقاف الحملة الحالية فوراً دون تحفظ، لعدم وجود مبرر كافٍ لاستمرارها', score:89, confidence:86,
-      expectedProfit:'توفير 9,300 ر.س شهرياً بالكامل', risks:['فقدان زخم الوصول المكتسب من الحملة مؤقتاً'],
-      stopCondition:'إذا لم تُظهر حملة بديلة أداءً أفضل خلال 5 أيام',
-      timing:'الآن', kpis:['التوفير الفعلي في الإنفاق الإعلاني','أداء الحملات البديلة إن وُجدت'],
-      plan:['إيقاف الحملة على المنصة الإعلانية فوراً','مراجعة الميزانية المحررة ضمن خطة التسويق العامة','مراجعة الأداء خلال 5 أيام'] } },
-
-  'هل أطلب كمية جديدة من المخزون؟': {
-    subtitle:'مثال مطبّق على: سيروم فيتامين C',
-    opinions:[
-      { cellId:'inventory', stance:'يؤيد', highlight:'نفاد متوقع خلال 9 أيام', text:'المخزون سينفد خلال 9 أيام بمعدل البيع الحالي، ومدة توريد المورد 12 يوماً — فجوة نفاد شبه مؤكدة دون طلب فوري.',
-        evidence:['متوسط المبيعات اليومية 27 قطعة','مدة توريد المورد المعتاد'], benefits:['تفادي نفاد المنتج الأعلى مبيعاً'], risks:['تكلفة تخزين إضافية إذا تباطأت المبيعات فجأة'],
-        impact:38000, confidence:91, conditions:[], alternative:null },
-      { cellId:'ads', stance:'يؤيد', highlight:'إعلان نشط على هذا المنتج', text:'إعلان نشط يستهدف هذا المنتج تحديداً، ونفاده سيوقف الحملة ويهدر الإنفاق المستمر عليها.',
-        evidence:['حملة نشطة بعائد 2.4x على هذا المنتج'], benefits:['استمرارية أداء الحملة الإعلانية'], risks:[],
-        impact:12000, confidence:84, conditions:[], alternative:null },
-      { cellId:'profit', stance:'يؤيد', highlight:'من أعلى المنتجات ربحية', text:'هامش ربح المنتج من الأعلى في المتجر، وأي نفاد يعني خسارة ربح مباشرة وليس مبيعات فقط.',
-        evidence:['هامش الربح لكل وحدة من هذا المنتج'], benefits:['حماية أحد أعلى مصادر الربح'], risks:['التزام مالي فوري بتكلفة الطلبية'],
-        impact:38000, confidence:88, conditions:[], alternative:null },
-    ],
-    verdict:{ decision:'الموافقة على طلب 240 قطعة فوراً من المورد المعتمد', score:92, confidence:90,
-      expectedProfit:'تفادي خسارة ~38,000 ر.س مبيعات ومواصلة أداء الحملة الإعلانية', risks:['تغيّر مفاجئ في معدل الطلب أثناء فترة التوريد'],
-      stopCondition:'إذا تباطأت المبيعات أكثر من 30% قبل وصول الطلبية',
-      timing:'خلال 24 ساعة', kpis:['وصول الطلبية قبل نفاد المخزون الحالي','استمرار عائد الحملة الإعلانية دون انقطاع'],
-      plan:['إرسال أمر شراء للمورد المعتمد اليوم','تأكيد الكمية والسعر خلال 24 ساعة','تحديث المخزون المتوقع في سلة فور التأكيد'] } },
-
-  'هل أربط المتجر بواتساب؟': {
-    subtitle:'مثال مطبّق على: قناة تواصل فورية لأسئلة الشحن',
-    opinions:[
-      { cellId:'pulse', stance:'يؤيد', highlight:'156 استفساراً عن الشحن شهرياً', text:'156 محادثة دعم تتضمن سؤالاً عن الشحن، و40% منها قبل إتمام الطلب مباشرة — إشارة واضحة لفجوة معلومات تمنع الشراء.',
-        evidence:['تحليل محادثات الدعم الشهرية','سلوك مغادرة صفحة المنتج دون شراء'], benefits:['تقليل تردد العملاء قبل الشراء'], risks:['حاجة لإدارة القناة يومياً'],
-        impact:21000, confidence:74, conditions:['تفعيل رسالة تلقائية توضح خيارات الشحن'], alternative:null },
-      { cellId:'customers', stance:'يؤيد', highlight:'يحسّن تجربة العملاء المترددين', text:'قناة تواصل فورية تحسّن تجربة العملاء المترددين وقد ترفع معدل الاحتفاظ.',
-        evidence:['شكاوى العملاء عن صعوبة التواصل الحالية'], benefits:['تحسين رضا العملاء وسرعة الاستجابة'], risks:['توقعات عملاء بردود فورية على مدار الساعة'],
-        impact:8000, confidence:69, conditions:[], alternative:null },
-      { cellId:'quality', stance:'محايد', highlight:'يحتاج قياساً لأسبوعين', text:'الأدلة كافية لتجربة محدودة، لكن قياس الأثر الفعلي يحتاج فترة لا تقل عن أسبوعين قبل اعتباره قراراً نهائياً.',
-        evidence:['حجم العينة الحالي للمحادثات'], benefits:['قرار مبني على قياس فعلي لاحقاً'], risks:[],
-        impact:0, confidence:70, conditions:['مراجعة النتيجة بعد أسبوعين'], alternative:null },
-    ],
-    verdict:{ decision:'الموافقة على ربط واتساب مع رسالة تلقائية توضح مدة وتكلفة الشحن', score:78, confidence:76,
-      expectedProfit:'رفع تقديري لمعدل إكمال الطلب بنسبة 6% (~21,000 ر.س)', risks:['الحاجة لإدارة القناة والرد خلال وقت معقول'],
-      stopCondition:'إذا لم يتحسن معدل إكمال الطلب خلال 3 أسابيع',
-      timing:'خلال هذا الأسبوع', kpis:['معدل إكمال الطلب بعد الربط','عدد المحادثات المتعلقة بالشحن'],
-      plan:['ربط رقم واتساب الأعمال بالمتجر عبر التكامل','تفعيل رسالة تلقائية بخيارات ومدة الشحن','قياس الأثر على إكمال الطلب بعد أسبوعين'] } },
-};
-
-function genericCouncilScenario(question){
-  const pickMap = {
-    'هل أقدم شحناً مجانياً؟': ['profit','customers','pricing'],
-    'هل أضيف وسيلة دفع جديدة؟': ['profit','pricing','customers'],
-    'هل أطور تصميم الموقع؟': ['pulse','customers','profit'],
-    'هل أطلق حملة خصم؟': ['pricing','profit','ads'],
-  };
-  const ids = pickMap[question] || ['profit','customers','quality'];
-  const stances = ['يؤيد','يؤيد','محايد'];
-  const opinions = ids.map((id,i)=>{
-    const c = CELL(id);
-    return { cellId:id, stance:stances[i], highlight:`${c.kpis[0].label}: ${c.kpis[0].value}`, text:c.insight, evidence:c.sources.map(s=>'بيانات من: '+s),
-      benefits:['اتساق مع اختصاص الخلية في '+c.name], risks:['يتطلب تأكيد بيانات أحدث قبل التنفيذ الكامل'],
-      impact:Math.round(8000+Math.random()*15000), confidence:60+Math.floor(Math.random()*22), conditions:[], alternative:null };
-  });
-  const avgConf = Math.round(opinions.reduce((a,o)=>a+o.confidence,0)/opinions.length);
-  return { subtitle:'تحليل أولي مبني على بيانات الخلايا ذات الصلة', opinions,
-    verdict:{ decision:'دراسة القرار ضمن نطاق محدود قبل التنفيذ الكامل، بالتنسيق بين '+ids.map(i=>CELL(i).name).join('، '),
-      score:Math.round(avgConf*0.9), confidence:avgConf,
-      expectedProfit:'أثر تقديري يحتاج تأكيداً بعد فترة قياس قصيرة', risks:['بيانات القرار لم تُدرس بعمق كافٍ بعد'],
-      stopCondition:'إذا لم تتأكد الفائدة المتوقعة خلال فترة القياس الأولى',
-      timing:'خلال الأسبوعين القادمين', kpis:['المؤشر الرئيسي لدى كل خلية مشاركة'],
-      plan:['جمع بيانات إضافية من الخلايا المعنية','تجربة محدودة النطاق قبل التعميم','مراجعة النتيجة الفعلية مقابل التوقع'] } };
-}
-function getCouncilScenario(q){ return COUNCIL_SCENARIOS[q] || genericCouncilScenario(q); }
+/* REMOVED: COUNCIL_SCENARIOS / genericCouncilScenario / getCouncilScenario —
+   these used to be fully hardcoded fake "council" answers (including a
+   generic fallback that called Math.random() to invent a financial impact
+   figure, and subtitles that assumed a specific named product even when
+   the merchant's question never named one), completely disconnected from
+   real data or real AI. Every question studied here now goes through
+   POST /api/council/study, which calls Claude with the store's real cell
+   data and refuses to invent unnamed specifics. See studyDecision() below. */
 
 /* ---------------- بيانات التكاملات ---------------- */
 const INTEGRATIONS = [
@@ -1216,17 +1124,12 @@ function askLeaderQuickBlock(id){
 }
 
 /* ---------------- صفحة: المجلس الاستشاري للخلايا ---------------- */
-const COUNCIL_LOG = [
-  {q:'هل أوقف حملة الإعلانات ذات العائد المنخفض؟', date:'٢٥ أغسطس', score:83, outcome:'وافق التاجر ونُفّذ — النتيجة: توفير 7,100 ر.س'},
-  {q:'هل أرفع سعر شمعة معطرة موسمية؟', date:'١٩ أغسطس', score:58, outcome:'عدّل التاجر النسبة إلى 6% بدل 15%'},
-  {q:'هل أضيف بوابة الدفع الآجل؟', date:'٢٤ يوليو', score:76, outcome:'وافق التاجر ونُفّذ — قيد القياس'},
-];
 function renderCouncil(){
   const preset = STATE.councilPreset || '';
   return `
     <div class="view-head">
       <div><div class="eyebrow">غرفة دراسة القرارات</div><h1 class="view-title">المجلس الاستشاري للخلايا</h1>
-      <p class="view-sub">اعرض أي قرار تريد دراسته — تستدعي «قائد الخلية» جميع الخلايا ذات العلاقة، وتصدر توصية موحدة بدرجة ونسبة ثقة قبل أي تنفيذ.</p></div>
+      <p class="view-sub">اعرض أي قرار تريد دراسته — يستدعي «قائد الخلية» الخلايا ذات العلاقة الفعلية، ويصدر توصية مبنية على بياناتها الحقيقية فقط، قبل أي تنفيذ.</p></div>
     </div>
 
     <div class="card card-pad" style="margin-bottom:18px">
@@ -1244,55 +1147,102 @@ function renderCouncil(){
 
     <div class="card card-pad" style="margin-top:18px">
       <div class="section-title"><span>سجل اجتماعات المجلس السابقة</span></div>
-      <div class="grid g-3">
-        ${COUNCIL_LOG.map(l=>`<div style="border:1px solid var(--border-soft);border-radius:12px;padding:12px">
-          <div style="font-size:12.5px;font-weight:600;line-height:1.6;margin-bottom:8px">${l.q}</div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span class="chip chip-accent">الدرجة ${l.score}/100</span><span style="font-size:11px;color:var(--muted)">${l.date}</span>
-          </div>
-          <div style="font-size:11.5px;color:var(--text-2);margin-top:8px">${l.outcome}</div>
-        </div>`).join('')}
-      </div>
+      <p style="font-size:12.5px;color:var(--muted);padding:6px 2px 2px">لا يوجد سجل حقيقي لقرارات سابقة بعد — هذه الميزة لا تحتفظ حالياً بسجل دائم لما يُدرَس هنا.</p>
     </div>
   `;
 }
 const stanceChip = (st)=> st==='يؤيد' ? 'chip-good' : st==='يعارض' ? 'chip-risk' : 'chip-muted';
 const stanceRingColor = (st)=> st==='يؤيد' ? 'good' : st==='يعارض' ? 'risk' : 'accent';
 
-function studyDecision(question){
+function councilLoadingHtml(){
+  return `
+    <div class="card card-pad" style="display:flex;align-items:center;gap:10px">
+      <div class="avatar-cell" style="width:30px;height:30px;flex:0 0 30px;background:var(--accent-soft);color:var(--accent-strong)">${icon('captain')}</div>
+      <div style="font-size:13px;color:var(--muted)">قائد الخلية يستدعي الخلايا المعنية ويدرس القرار بناءً على بياناتها الحقيقية…</div>
+    </div>
+  `;
+}
+function councilErrorHtml(msg){
+  return `
+    <div class="card card-pad" style="border-color:var(--risk)">
+      <div style="font-size:13px;color:var(--risk-strong);line-height:1.9">${escapeHtml(msg)}</div>
+    </div>
+  `;
+}
+function councilClarifyHtml(clarify){
+  return `
+    <div class="card card-pad">
+      <div class="eyebrow" style="margin-bottom:6px">${icon('captain')} قائد الخلية يحتاج توضيحاً قبل الدراسة</div>
+      <div style="font-size:13.5px;line-height:1.9;margin-bottom:14px">${escapeHtml(clarify)}</div>
+      <div style="display:flex;gap:8px">
+        <input id="councilClarifyInput" placeholder="اكتب السؤال موضّحاً (مثال: هل أخفض سعر عطر الورد الفاخر؟)…"
+          style="flex:1;padding:10px 13px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px"
+          onkeydown="if(event.key==='Enter'){studyDecision(document.getElementById('councilClarifyInput').value);}" />
+        <button class="btn btn-primary" onclick="studyDecision(document.getElementById('councilClarifyInput').value)">${icon('council')} أعد الدراسة</button>
+      </div>
+    </div>
+  `;
+}
+
+async function studyDecision(question){
   if(!question || !question.trim()) return;
   question = question.trim();
-  const s = getCouncilScenario(question);
-  STATE.currentCouncil = {question, s};
   const box = document.getElementById('councilResult');
+  if(!box) return;
+  box.innerHTML = councilLoadingHtml();
+  box.scrollIntoView({behavior:'smooth', block:'start'});
+
+  let res;
+  try{
+    res = await api('/api/council/study', {method:'POST', body:{question}});
+  }catch(err){
+    box.innerHTML = councilErrorHtml((err && err.data && err.data.error) || 'تعذّر دراسة القرار — حاول مرة أخرى.');
+    return;
+  }
+
+  const s = res.result;
+  if(s.needsClarification){
+    STATE.currentCouncil = null;
+    box.innerHTML = councilClarifyHtml(s.needsClarification);
+    box.scrollIntoView({behavior:'smooth', block:'start'});
+    return;
+  }
+
+  STATE.currentCouncil = {question, s};
   const agreeing = s.opinions.filter(o=>o.stance!=='يعارض');
   const opposing = s.opinions.filter(o=>o.stance==='يعارض');
   const agreeCount = s.opinions.filter(o=>o.stance==='يؤيد').length;
   const statusLabel = opposing.length ? 'موافقة مشروطة' : s.verdict.score>=80 ? 'موافقة' : s.verdict.score>=60 ? 'موافقة مشروطة' : 'بحاجة لمراجعة';
   const statusChip = opposing.length || s.verdict.score<80 ? 'chip-accent' : 'chip-good';
 
+  if(!s.opinions.length){
+    box.innerHTML = councilErrorHtml('لم يتمكن قائد الخلية من ربط أي خلية حقيقية بهذا السؤال. حاول صياغته بشكل أوضح.');
+    return;
+  }
+
   box.innerHTML = `
     <div class="council-result-head">
       <div class="eyebrow">القرار قيد الدراسة</div>
-      <h2 style="font-size:20px;font-weight:700">${question}</h2>
+      <h2 style="font-size:20px;font-weight:700">${escapeHtml(question)}</h2>
+      ${s.subtitle ? `<p style="font-size:12.5px;color:var(--muted);margin-top:4px">${escapeHtml(s.subtitle)}</p>` : ''}
     </div>
 
     <div class="council-columns">
       <div class="card council-left">
         <div class="section-title"><span>${icon('council')} تصويت الخلايا ذات العلاقة</span></div>
         <div class="vote-grid" style="grid-template-columns:repeat(${Math.max(1,Math.min(agreeing.length,3))},1fr)">
-          ${agreeing.map(o=>{ const c=CELL(o.cellId); return `
+          ${agreeing.map(o=>{ const c=CELL(o.cellId); if(!c) return ''; return `
           <div class="vote-card">
             <div class="vc-icon" style="color:var(--${c.color})">${icon(c.icon)}</div>
             <div class="vc-name">${c.name}</div>
             <span class="chip ${stanceChip(o.stance)}">${o.stance}</span>
-            <div class="vc-highlight">${o.highlight || o.text}</div>
+            <div class="vc-highlight">${escapeHtml(o.highlight || o.text)}</div>
             <div class="vc-conf">${scoreRing(o.confidence,20,stanceRingColor(o.stance))} <span class="num">${o.confidence}%</span></div>
           </div>`;}).join('')}
         </div>
         <div class="vote-bottom-row">
           <div class="vote-oppose-box ${opposing.length?'has-oppose':''}">
-            ${opposing.length ? opposing.map(o=>{ const c=CELL(o.cellId); return `<div style="display:flex;align-items:center;gap:6px"><span class="ic" style="color:var(--${c.color})">${icon(c.icon)}</span><b>${c.name}</b> — ${o.highlight||o.text}</div>`; }).join('') : 'لا توجد خلايا معارضة لهذا القرار'}
+            ${opposing.length ? opposing.map(o=>{ const c=CELL(o.cellId); if(!c) return ''; return `<div style="display:flex;align-items:center;gap:6px"><span class="ic" style="color:var(--${c.color})">${icon(c.icon)}</span><b>${c.name}</b> — ${escapeHtml(o.highlight||o.text)}</div>`; }).join('') : 'لا توجد خلايا معارضة لهذا القرار'}
           </div>
           <button class="vote-details-btn" onclick="openCouncilVoteDetails()">${icon('doc')} تفاصيل اتخاذ القرار</button>
         </div>
@@ -1302,20 +1252,19 @@ function studyDecision(question){
         <div class="lv-bookmark">${icon('bookmark')}</div>
         <div class="lv-title">قرار قائد الخلية</div>
         <span class="chip ${statusChip}" style="margin-top:8px"><span class="d"></span>${statusLabel}</span>
-        <div class="lv-headline">${s.verdict.decision}</div>
+        <div class="lv-headline">${escapeHtml(s.verdict.decision)}</div>
         <div class="lv-stats">
-          <div class="lv-stat"><div class="v" style="color:var(--good-strong)">${s.verdict.expectedProfit}</div><div class="l">الأثر المتوقع</div></div>
+          <div class="lv-stat"><div class="v" style="color:var(--good-strong)">${escapeHtml(s.verdict.expectedProfit)}</div><div class="l">الأثر المتوقع</div></div>
           <div class="lv-stat"><div class="v num">${s.verdict.confidence}%</div><div class="l">الثقة الإجمالية ${icon('quality')}</div></div>
         </div>
         <div class="lv-agree">${icon('customers')} خلايا موافقة: <span class="num">${agreeCount} من ${s.opinions.length}</span></div>
-        <div class="lv-risk-row">${icon('warn')} <span><b>الخطر:</b> ${s.verdict.risks[0]}</span></div>
-        <div class="lv-risk-row">${icon('warn')} <span><b>شرط الإيقاف:</b> ${s.verdict.stopCondition}</span></div>
+        ${s.verdict.risks[0] ? `<div class="lv-risk-row">${icon('warn')} <span><b>الخطر:</b> ${escapeHtml(s.verdict.risks[0])}</span></div>` : ''}
+        ${s.verdict.stopCondition ? `<div class="lv-risk-row">${icon('warn')} <span><b>شرط الإيقاف:</b> ${escapeHtml(s.verdict.stopCondition)}</span></div>` : ''}
         <div class="lv-actions">
-          <button class="btn btn-risk btn-sm" onclick="toast('تم رفض القرار وتسجيله في سجل المجلس')">رفض</button>
-          <button class="btn btn-ghost btn-sm" onclick="toast('تم إرسال طلب تعديل للخلايا المعنية')">تعديل</button>
-          <button class="btn btn-good btn-sm" onclick="toast('تمت الموافقة — تم إرسال القرار لمركز القرارات للتنفيذ')">${icon('check')} الموافقة</button>
+          <button class="btn btn-risk btn-sm" onclick="toast('تم رفض القرار')">رفض</button>
+          <button class="btn btn-ghost btn-sm" onclick="toast('لتعديل القرار، أعد صياغة سؤالك أعلاه وادرسه من جديد')">تعديل</button>
+          <button class="btn btn-good btn-sm" onclick="toast('تمت الموافقة — التنفيذ الفعلي يتم يدوياً حالياً من لوحة المتجر')">${icon('check')} الموافقة</button>
         </div>
-        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="toast('التنفيذ الآلي مفعّل — سيبدأ فور الموافقة')">${icon('bolt')} تفعيل التنفيذ الآلي بعد الموافقة</button>
       </div>
     </div>
   `;
@@ -1327,35 +1276,35 @@ function openCouncilVoteDetails(){
   const {question, s} = cur;
   openModal(`
     <div class="eyebrow">تفاصيل اتخاذ القرار</div>
-    <h2 style="font-size:16px;font-weight:700;margin-bottom:14px">${question}</h2>
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:14px">${escapeHtml(question)}</h2>
 
     <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
-      ${s.opinions.map(o=>{ const c=CELL(o.cellId); return `
+      ${s.opinions.map(o=>{ const c=CELL(o.cellId); if(!c) return ''; return `
       <div style="border:1px solid var(--border-soft);border-radius:12px;padding:14px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <div class="avatar-cell" style="width:30px;height:30px;flex:0 0 30px;background:var(--${c.color}-soft);color:var(--${c.color})">${icon(c.icon)}</div>
           <div style="flex:1;font-size:13px;font-weight:700">${c.name}</div>
           <span class="chip ${stanceChip(o.stance)}">${o.stance}</span>
         </div>
-        <p style="font-size:12.5px;line-height:1.9;color:var(--text-2);margin-bottom:8px">${o.text}</p>
+        <p style="font-size:12.5px;line-height:1.9;color:var(--text-2);margin-bottom:8px">${escapeHtml(o.text)}</p>
         <div style="font-size:11px;color:var(--muted);margin-bottom:4px">الأدلة المستخدمة</div>
-        <ul style="margin:0 0 8px;padding-inline-start:18px;font-size:11.5px;color:var(--text-2);line-height:1.85">${o.evidence.map(e=>`<li>${e}</li>`).join('')}</ul>
+        <ul style="margin:0 0 8px;padding-inline-start:18px;font-size:11.5px;color:var(--text-2);line-height:1.85">${o.evidence.map(e=>`<li>${escapeHtml(e)}</li>`).join('') || '<li>لا توجد أدلة مذكورة</li>'}</ul>
         <div class="grid g-2" style="gap:6px;margin-bottom:6px">
-          <div><div style="font-size:10px;color:var(--muted)">الأثر المالي</div><div class="num" style="font-size:12px;font-weight:700">${money(Math.abs(o.impact))}</div></div>
+          <div><div style="font-size:10px;color:var(--muted)">الأثر المالي</div><div class="num" style="font-size:12px;font-weight:700">${o.impact != null ? money(Math.abs(o.impact)) : 'غير قابل للتقدير بالبيانات الحالية'}</div></div>
           <div><div style="font-size:10px;color:var(--muted)">نسبة الثقة</div><div class="num" style="font-size:12px;font-weight:700">${o.confidence}%</div></div>
         </div>
-        ${o.conditions.length?`<div style="font-size:11px;color:var(--text-2)"><b>شروط النجاح:</b> ${o.conditions.join('، ')}</div>`:''}
-        ${o.alternative?`<div style="font-size:11px;color:var(--accent-strong);margin-top:6px">${icon('flag')} بديل مقترح: ${o.alternative}</div>`:''}
+        ${o.conditions.length?`<div style="font-size:11px;color:var(--text-2)"><b>شروط النجاح:</b> ${o.conditions.map(escapeHtml).join('، ')}</div>`:''}
+        ${o.alternative?`<div style="font-size:11px;color:var(--accent-strong);margin-top:6px">${icon('flag')} بديل مقترح: ${escapeHtml(o.alternative)}</div>`:''}
       </div>`;}).join('')}
     </div>
 
     <div class="divider"></div>
     <div style="margin-bottom:10px"><div style="font-size:11.5px;color:var(--muted);margin-bottom:4px">أفضل وقت للتنفيذ</div>
-      <div style="font-size:13px;font-weight:700">${s.verdict.timing}</div></div>
+      <div style="font-size:13px;font-weight:700">${escapeHtml(s.verdict.timing)}</div></div>
     <div style="margin-bottom:10px"><div style="font-size:11.5px;color:var(--muted);margin-bottom:4px">خطة التنفيذ</div>
-      <ol style="margin:0;padding-inline-start:18px;font-size:12.5px;color:var(--text-2);line-height:2">${s.verdict.plan.map(p=>`<li>${p}</li>`).join('')}</ol></div>
+      <ol style="margin:0;padding-inline-start:18px;font-size:12.5px;color:var(--text-2);line-height:2">${s.verdict.plan.map(p=>`<li>${escapeHtml(p)}</li>`).join('')}</ol></div>
     <div><div style="font-size:11.5px;color:var(--muted);margin-bottom:4px">مؤشرات قياس النجاح</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${s.verdict.kpis.map(k=>`<span class="chip chip-info">${k}</span>`).join('')}</div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${s.verdict.kpis.map(k=>`<span class="chip chip-info">${escapeHtml(k)}</span>`).join('')}</div></div>
   `);
 }
 
