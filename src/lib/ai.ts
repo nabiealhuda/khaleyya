@@ -18,10 +18,16 @@ export class AiRequestError extends Error {}
 
 type AnthropicContentBlock = { type: string; text?: string };
 type AnthropicResponse = { content?: AnthropicContentBlock[] };
+export type AiMessage = { role: "user" | "assistant"; content: string };
 
 export async function askClaude(opts: {
   system: string;
-  userMessage: string;
+  // Either a single one-shot message, or a full conversation (in
+  // chronological order, ending with the latest "user" turn) so the model
+  // has real prior context instead of guessing at things like "هذا المنتج"
+  // with nothing behind them. Exactly one of these must be given.
+  userMessage?: string;
+  messages?: AiMessage[];
   maxTokens?: number;
 }): Promise<string> {
   if (!env.ANTHROPIC_API_KEY) {
@@ -29,6 +35,10 @@ export async function askClaude(opts: {
       "ميزة الذكاء الاصطناعي غير مُفعّلة بعد على الخادم — لم يتم إعداد مفتاح API."
     );
   }
+
+  const messages: AiMessage[] = opts.messages?.length
+    ? opts.messages
+    : [{ role: "user", content: opts.userMessage ?? "" }];
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30_000);
@@ -46,7 +56,7 @@ export async function askClaude(opts: {
         model: MODEL,
         max_tokens: opts.maxTokens ?? 700,
         system: opts.system,
-        messages: [{ role: "user", content: opts.userMessage }],
+        messages,
       }),
       signal: controller.signal,
     });

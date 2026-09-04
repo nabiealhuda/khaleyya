@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { withRoute, jsonError } from "@/lib/api";
 import { prisma } from "@/lib/db";
-import { askClaude, AiNotConfiguredError, AiRequestError } from "@/lib/ai";
-import type { Cell, Decision } from "@prisma/client";
+import { askClaude, AiNotConfiguredError, AiRequestError, type AiMessage } from "@/lib/ai";
+import type { Cell, Decision, MeetingMessage } from "@prisma/client";
 
 /**
  * Real AI-backed replacement for what used to be a client-side keyword
@@ -38,6 +38,31 @@ function sourcesOf(sources: unknown): string[] {
   return Array.isArray(sources) ? (sources as unknown[]).map(String) : [];
 }
 
+// Turns the store's saved MeetingMessage history (oldest first) plus the
+// merchant's newest message into a valid Anthropic messages array: roles
+// must alternate starting with "user", so consecutive same-role entries
+// (e.g. two merchant messages in a row after a failed/unanswered turn) are
+// merged rather than sent as-is. Without real history here, the model has
+// no legitimate way to resolve a reference like "هذا المنتج" ("this
+// product") from an earlier turn — it would have to guess.
+function toConversation(history: MeetingMessage[], newUserText: string): AiMessage[] {
+  const raw: AiMessage[] = [
+    ...history.map((m) => ({ role: m.role === "MERCHANT" ? ("user" as const) : ("assistant" as const), content: m.text })),
+    { role: "user" as const, content: newUserText },
+  ];
+  const merged: AiMessage[] = [];
+  for (const m of raw) {
+    const last = merged[merged.length - 1];
+    if (last && last.role === m.role) {
+      last.content = `${last.content}\n${m.content}`;
+    } else {
+      merged.push({ ...m });
+    }
+  }
+  while (merged.length && merged[0].role !== "user") merged.shift();
+  return merged;
+}
+
 function buildSystemPrompt(storeName: string, cells: Cell[], decisions: Decision[], focusSlugs: string[]): string {
   const cellLines = cells
     .map((c) => {
@@ -67,10 +92,11 @@ function buildSystemPrompt(storeName: string, cells: Cell[], decisions: Decision
     ``,
     `قواعد صارمة لا تخرج عنها أبداً:`,
     `1. لا تختلق أرقاماً أو حقائق غير موجودة في البيانات المُعطاة لك أدناه. إذا سُئلت عن خلية ليس لها بيانات حقيقية مرتبطة، صرّح بوضوح أن بياناتها الفعلية غير مربوطة بعد، ولا تخترع أرقاماً بديلة.`,
-    `2. لا تفترض أو تخترع تفاصيل لم يذكرها التاجر صراحةً في نص سؤاله — مثل ربط سؤاله بمنتج أو خلية أو حملة معيّنة لم يسمّها. إذا كان السؤال عاماً أو غامضاً (مثل: "هل أطلق حملة خصم؟" بلا تحديد أي منتج)، أجب بشكل عام مبني على الصورة الكلية للبيانات المتوفرة، أو اسأل التاجر عن التوضيح المطلوب (مثل: أي منتج أو خلية يقصد) بدل أن تفترض إجابة كأن السؤال كان محدداً.`,
-    `3. كن مختصراً ومباشراً — فقرة أو فقرتين كحد أقصى، بلا مقدمات طويلة أو حشو.`,
-    `4. إن وُجدت توصية عملية واضحة مبنية على البيانات الحقيقية المتوفرة، اذكرها صراحةً — لكن فقط عندما ترتبط فعلاً بما سأل عنه التاجر.`,
-    `5. تحدث بثقة ومهنية كقائد فريق حقيقي، لا كروبوت يكرر نفس الصياغات.`,
+    `2. لا تفترض أو تخترع تفاصيل لم يذكرها التاجر صراحةً — لا في هذا السؤال ولا في أي رسالة سابقة ضمن هذه المحادثة المعروضة لك أدناه. إذا كان السؤال عاماً أو غامضاً (مثل: "هل أطلق حملة خصم؟" بلا تحديد أي منتج)، أجب بشكل عام مبني على الصورة الكلية للبيانات المتوفرة، أو اسأل التاجر عن التوضيح المطلوب بدل افتراض إجابة محددة.`,
+    `3. انتبه خصوصاً لعبارات الإشارة مثل "هذا المنتج"، "هذه الحملة"، "نفس الخلية" — هذه العبارات تشير إلى شيء افترض التاجر أنه مفهوم من سياق المحادثة. إن لم يكن هناك منتج أو حملة أو خلية محددة بالاسم في السؤال الحالي أو في الرسائل السابقة الفعلية أدناه، فلا يوجد "هذا" واضح لديك — لا تختر أي عنصر من بيانات الخلايا وتفترض أنه المقصود. بدلاً من ذلك، صرّح بأنك لا تعرف أي منتج/حملة يقصد واطلب منه تحديد الاسم.`,
+    `4. كن مختصراً ومباشراً — فقرة أو فقرتين كحد أقصى، بلا مقدمات طويلة أو حشو.`,
+    `5. إن وُجدت توصية عملية واضحة مبنية على البيانات الحقيقية المتوفرة، اذكرها صراحةً — لكن فقط عندما ترتبط فعلاً بما سأل عنه التاجر.`,
+    `6. تحدث بثقة ومهنية كقائد فريق حقيقي، لا كروبوت يكرر نفس الصياغات.`,
     ``,
     `بيانات الخلايا الحالية:`,
     cellLines,
@@ -87,10 +113,18 @@ export const POST = withRoute(
     const parsed = bodySchema.safeParse(body);
     if (!parsed.success) return jsonError("رسالة غير صالحة", 422, parsed.error.flatten());
 
-    const [store, cells, decisions] = await Promise.all([
+    const [store, cells, decisions, recentHistory] = await Promise.all([
       prisma.store.findUnique({ where: { id: ctx.storeId } }),
       prisma.cell.findMany({ where: { storeId: ctx.storeId }, orderBy: { sortOrder: "asc" } }),
       prisma.decision.findMany({ where: { storeId: ctx.storeId } }),
+      // Real prior turns, oldest first — without this the model has no
+      // legitimate way to resolve "هذا المنتج" ("this product") or similar
+      // references to something said earlier, and would have to guess.
+      prisma.meetingMessage.findMany({
+        where: { storeId: ctx.storeId },
+        orderBy: { createdAt: "desc" },
+        take: 12,
+      }),
     ]);
     if (!store) return jsonError("المتجر غير موجود", 404);
 
@@ -101,10 +135,11 @@ export const POST = withRoute(
     });
 
     const system = buildSystemPrompt(store.name, cells, decisions, parsed.data.focusCellSlugs);
+    const messages = toConversation(recentHistory.reverse(), parsed.data.text);
 
     let replyText: string;
     try {
-      replyText = await askClaude({ system, userMessage: parsed.data.text });
+      replyText = await askClaude({ system, messages });
     } catch (err) {
       if (err instanceof AiNotConfiguredError || err instanceof AiRequestError) {
         return jsonError(err.message, 503);
