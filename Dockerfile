@@ -49,11 +49,18 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 # for that one relative import to resolve at container start.
 COPY --from=builder --chown=nextjs:nodejs /app/src/lib/integrations ./src/lib/integrations
 COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
-COPY --from=builder /app/node_modules/.bin/prisma /app/node_modules/.bin/prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/tsx ./node_modules/tsx
-COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
+# Next's standalone output only traces node_modules for what the Next.js
+# server itself imports — it does NOT know about prisma/tsx, which the CMD
+# below invokes directly as separate CLI processes outside Next's module
+# graph. Cherry-picking specific subfolders (prisma, @prisma, tsx, bcryptjs)
+# previously broke at runtime with "ENOENT ... prisma_schema_build_bg.wasm"
+# because Prisma's CLI needs extra helper files (a wasm binary, engine
+# files) that live at paths this project doesn't control and that shift
+# between Prisma versions. Copying the full node_modules here instead is a
+# few hundred MB larger but eliminates this whole class of "missing sibling
+# file" bug for good — Docker COPY merges into the existing ./node_modules
+# from the standalone copy above rather than replacing it.
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 
