@@ -1,0 +1,242 @@
+// خَلِيّة — Prisma schema
+// Multi-tenant-ready: every business table is scoped by storeId, even though
+// only a single store is seeded/used today. This lets the product grow into
+// a real multi-merchant SaaS later without a schema rewrite.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Tenancy & auth
+// ---------------------------------------------------------------------------
+
+model Store {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users        User[]
+  cells        Cell[]
+  decisions    Decision[]
+  automations  Automation[]
+  tasks        CellTask[]
+  activity     ActivityItem[]
+  meetingMsgs  MeetingMessage[]
+  integrations IntegrationConnection[]
+  sessions     Session[]
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(OWNER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions Session[]
+
+  @@index([storeId])
+}
+
+// Server-side session record backing the signed JWT cookie, so a session can
+// be revoked (logout-everywhere, password change) instead of only expiring.
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+
+  @@index([userId])
+  @@index([storeId])
+}
+
+// ---------------------------------------------------------------------------
+// Business intelligence cells
+// ---------------------------------------------------------------------------
+
+model Cell {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  slug      String // stable key, e.g. 'profit' | 'custom-...'
+  name      String
+  tagline   String
+  icon      String
+  color     String
+  score     Int      @default(70)
+  isCustom  Boolean  @default(false)
+  sortOrder Int      @default(0)
+  kpis      Json // [{label,value,delta,up}]
+  chart     Json // [{l,v}]
+  sources   Json // string[]
+  insight   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  decisions   Decision[]
+  automations Automation[]
+  tasks       CellTask[]
+  activity    ActivityItem[]
+
+  @@unique([storeId, slug])
+  @@index([storeId])
+}
+
+enum DecisionStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  FAILED
+  REJECTED
+}
+
+model Decision {
+  id            String         @id @default(cuid())
+  storeId       String
+  store         Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  cellId        String
+  cell          Cell           @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  title         String
+  category      String
+  description   String         @db.Text
+  reason        String         @db.Text
+  evidence      Json // string[]
+  impact        Int
+  impactLabel   String
+  confidence    Int
+  risk          String
+  status        DecisionStatus @default(PENDING)
+  autoEligible  Boolean        @default(false)
+  supportCells  Json // string[] of cell slugs
+  opposeCells   Json // string[] of cell slugs
+  steps         Json // string[]
+  resultNote    String?        @db.Text
+  occurredLabel String? // human label like "٢٩ أغسطس" kept for continuity with the demo data
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  automations Automation[]
+
+  @@index([storeId, status])
+  @@index([cellId])
+}
+
+enum AutomationStatus {
+  IN_PROGRESS
+  DONE
+  FAILED
+}
+
+model Automation {
+  id         String           @id @default(cuid())
+  storeId    String
+  store      Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  decisionId String
+  decision   Decision         @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  cellId     String
+  cell       Cell             @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  title      String
+  changes    Json // string[]
+  expected   String
+  risk       String
+  reversible Boolean          @default(true)
+  perms      Json // string[]
+  status     AutomationStatus @default(IN_PROGRESS)
+  result     String?          @db.Text
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([storeId])
+}
+
+model CellTask {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  cellId    String
+  cell      Cell     @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  title     String
+  freq      String
+  source    String // 'system' | 'merchant'
+  createdAt DateTime @default(now())
+
+  @@index([storeId])
+  @@index([cellId])
+}
+
+model ActivityItem {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  cellId    String
+  cell      Cell     @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([storeId])
+}
+
+enum MeetingRole {
+  MERCHANT
+  LEADER
+  CELL
+}
+
+model MeetingMessage {
+  id        String      @id @default(cuid())
+  storeId   String
+  store     Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  role      MeetingRole
+  cellSlug  String? // set when role = CELL
+  text      String      @db.Text
+  createdAt DateTime    @default(now())
+
+  @@index([storeId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Integrations — provider-agnostic; see src/lib/integrations for the adapter
+// pattern. Demo provider is active for every row until a real one is wired.
+// ---------------------------------------------------------------------------
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  NEEDS_UPDATE
+  ISSUE
+}
+
+model IntegrationConnection {
+  id         String            @id @default(cuid())
+  storeId    String
+  store      Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  providerId String // matches an entry in the static PROVIDERS catalog, e.g. 'odoo'
+  status     IntegrationStatus @default(DISCONNECTED)
+  config     Json              @default("{}") // provider-specific, e.g. {url, db, username} — never store secrets in plaintext here; see src/lib/integrations
+  lastSyncAt DateTime?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([storeId, providerId])
+  @@index([storeId])
+}
