@@ -4,12 +4,11 @@ import { IntegrationProvider } from "./types";
 import { INTEGRATION_CATALOG } from "./catalog";
 
 /**
- * Flip this to true once OdooProvider.connect/getSnapshot are actually
- * implemented against a real Odoo instance. Until then every provider,
- * Odoo included, resolves to DemoProvider so the UI stays fully functional
- * with illustrative data.
+ * OdooProvider.connect/getSnapshot are now implemented against a real Odoo
+ * instance over JSON-RPC (see odoo-provider.ts) — enabled. Every other
+ * provider still resolves to DemoProvider until wired the same way.
  */
-const ODOO_PROVIDER_ENABLED = false;
+const ODOO_PROVIDER_ENABLED = true;
 
 const providers = new Map<string, IntegrationProvider>();
 

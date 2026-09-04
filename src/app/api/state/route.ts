@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withRoute } from "@/lib/api";
 import { prisma } from "@/lib/db";
+import type { IntegrationConnection } from "@prisma/client";
 
 /**
  * Single bootstrap endpoint: the dashboard fetches this once on load and
@@ -25,5 +26,23 @@ export const GET = withRoute(async (_req, ctx) => {
       prisma.integrationConnection.findMany({ where: { storeId: ctx.storeId } }),
     ]);
 
-  return NextResponse.json({ cells, decisions, automations, tasks, activity, meetingMessages, integrations });
+  // Never send IntegrationConnection.config to the browser — it holds
+  // encrypted provider credentials (see src/lib/crypto.ts) and the client
+  // has no legitimate use for even the ciphertext.
+  const sanitizedIntegrations = integrations.map((i: IntegrationConnection) => ({
+    id: i.id,
+    providerId: i.providerId,
+    status: i.status,
+    lastSyncAt: i.lastSyncAt,
+  }));
+
+  return NextResponse.json({
+    cells,
+    decisions,
+    automations,
+    tasks,
+    activity,
+    meetingMessages,
+    integrations: sanitizedIntegrations,
+  });
 });
