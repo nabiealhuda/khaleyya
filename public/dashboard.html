@@ -2328,7 +2328,53 @@ function renderSettings(){
           <span style="color:var(--good-strong);flex:0 0 auto;margin-top:2px">${icon('check')}</span>${r}</div>`).join('')}
       </div>
     </div>
+
+    <div class="card card-pad" style="margin-top:16px;border-color:var(--risk-soft)">
+      <div class="section-title"><span>${icon('trash')} البيانات التجريبية</span></div>
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;line-height:1.8">
+        عند إنشاء حسابك، يُعرض بعض المحتوى التوضيحي (قرارات وأرقام تجريبية) في الخلايا التي لا تملك بعد مصدر بيانات حقيقي مرتبط، حتى يظهر الموقع بشكل كامل من أول لحظة.
+        يمكنك حذف هذا المحتوى نهائياً بالضغط أدناه — الخلايا المرتبطة فعلياً بأودو (المخزون، المبيعات، الحسابات المالية، العملاء) لن تتأثر.
+      </p>
+      <button class="btn btn-sm" style="background:var(--risk-soft);color:var(--risk-strong)" onclick="confirmResetDemoData()">${icon('trash')} حذف القرارات والأرقام التجريبية</button>
+    </div>
   `;
+}
+
+function confirmResetDemoData(){
+  openModal(`
+    <div style="font-weight:700;font-size:16px;margin-bottom:10px">حذف القرارات والأرقام التجريبية؟</div>
+    <p style="font-size:13px;color:var(--text-2);line-height:1.8;margin-bottom:6px">
+      سيتم حذف جميع القرارات وسجلات التنفيذ الآلي نهائياً، وتفريغ أرقام الخلايا التي لا يوجد لها مصدر بيانات حقيقي مرتبط حالياً
+      (الإعلان، المنافسين، صحة الموقع، التطوير، جودة القرار، المشتريات) لتظهر بانتظار الربط بدل الأرقام التجريبية.
+      خلايا أودو المرتبطة (المخزون، المبيعات، الحسابات المالية، العملاء) لن تتأثر. هذا الإجراء لا يمكن التراجع عنه.
+    </p>
+    <div id="resetDemoError" style="display:none;font-size:12px;color:var(--risk-strong);background:var(--risk-soft);padding:9px 11px;border-radius:9px;line-height:1.8;margin-top:10px"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-primary btn-sm" id="resetDemoBtn" style="background:var(--risk-strong);border-color:var(--risk-strong)" onclick="resetDemoDataConfirmed()">${icon('trash')} تأكيد الحذف</button>
+    </div>
+  `);
+}
+
+function resetDemoDataConfirmed(){
+  const btnEl = document.getElementById('resetDemoBtn');
+  const errEl = document.getElementById('resetDemoError');
+  if(btnEl){ btnEl.disabled = true; btnEl.innerHTML = 'جارٍ الحذف…'; }
+
+  api('/api/settings/reset-demo-data', { method:'POST' })
+    .then(()=>{
+      closeModal();
+      toast('تم حذف القرارات التجريبية وتفريغ الخلايا غير المرتبطة ✓');
+      return loadStateFromServer();
+    })
+    .then(()=>{ router(); })
+    .catch(err=>{
+      if(btnEl){ btnEl.disabled = false; btnEl.innerHTML = icon('trash') + ' تأكيد الحذف'; }
+      if(errEl){
+        errEl.textContent = (err && err.data && err.data.error) || err.message || 'تعذّر الحذف — حاول مرة أخرى.';
+        errEl.style.display = 'block';
+      }
+    });
 }
 
 /* ---------------- نافذة تفاصيل القرار ---------------- */

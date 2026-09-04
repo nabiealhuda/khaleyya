@@ -216,6 +216,9 @@ const CELL_SYNCERS: Record<string, (cfg: OdooConfig, uid: number) => Promise<Cel
   customers: syncCustomers,
 };
 
+/** The built-in cell slugs that have a real Odoo-backed data source — used by the demo-data reset (src/app/api/settings/reset-demo-data/route.ts) to know which cells to leave alone. */
+export const ODOO_LINKED_CELL_SLUGS = Object.keys(CELL_SYNCERS);
+
 export async function syncOdooCells(storeId: string, cfg: OdooConfig, uid: number): Promise<CellSyncOutcome[]> {
   const outcomes: CellSyncOutcome[] = [];
 
