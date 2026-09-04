@@ -6,6 +6,9 @@ import { getIntegrationProvider } from "@/lib/integrations/registry";
 import { findIntegrationCatalogEntry } from "@/lib/integrations/catalog";
 import { IntegrationConfigError } from "@/lib/integrations/types";
 import { encryptJson } from "@/lib/crypto";
+import { logger } from "@/lib/logger";
+import { odooAuthenticate, parseOdooConfig } from "@/lib/integrations/odoo-client";
+import { syncOdooCells, CellSyncOutcome } from "@/lib/integrations/odoo-sync";
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
@@ -62,6 +65,23 @@ export const POST = withRoute<RouteCtx>(
       },
     });
 
+    // For Odoo specifically, pull real data into the connected cells right
+    // away so the merchant sees live numbers immediately after connecting
+    // instead of having to separately hit "sync now". Best-effort: a sync
+    // failure here must not undo or fail the connection itself, since
+    // authentication already succeeded above — the merchant is connected
+    // either way, and can retry the sync from the Integrations page.
+    let cellSyncOutcomes: CellSyncOutcome[] | undefined;
+    if (id === "odoo") {
+      try {
+        const cfg = parseOdooConfig(parsed.data.config);
+        const uid = await odooAuthenticate(cfg);
+        cellSyncOutcomes = await syncOdooCells(ctx.storeId, cfg, uid);
+      } catch (err) {
+        logger.error({ err, storeId: ctx.storeId }, "initial odoo cell sync after connect failed");
+      }
+    }
+
     return NextResponse.json({
       integration: {
         id: connection.id,
@@ -71,6 +91,7 @@ export const POST = withRoute<RouteCtx>(
       },
       reads: result.reads,
       actions: result.actions,
+      cellSyncOutcomes,
     });
   },
   { rateLimit: { limit: 10, windowMs: 60_000 } }
