@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { withRoute, jsonError } from "@/lib/api";
 import { prisma } from "@/lib/db";
-import { askClaude, AiNotConfiguredError, AiRequestError } from "@/lib/ai";
+import { askAI, AiNotConfiguredError, AiRequestError } from "@/lib/ai";
 import type { Cell } from "@prisma/client";
 
 /**
@@ -144,7 +144,7 @@ export const POST = withRoute(
 
     let raw: string;
     try {
-      raw = await askClaude({ system, userMessage: parsed.data.question, maxTokens: 1600 });
+      raw = await askAI({ system, userMessage: parsed.data.question, maxTokens: 1600 });
     } catch (err) {
       if (err instanceof AiNotConfiguredError || err instanceof AiRequestError) {
         return jsonError(err.message, 503);
