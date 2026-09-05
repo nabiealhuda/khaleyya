@@ -309,8 +309,14 @@ export async function syncOdooCells(storeId: string, cfg: OdooConfig, uid: numbe
     try {
       const update = await syncFn(cfg, uid);
       const insight = await aiInsight(cell.name, update.insight, update.kpis);
-      const existingSources = Array.isArray(cell.sources) ? (cell.sources as unknown[]) : [];
-      const sources = existingSources.includes("أودو") ? existingSources : [...existingSources, "أودو"];
+      // These 5 cells (see CELL_SYNCERS above) have exactly one real data
+      // source: this Odoo connection. The sources list is therefore SET to
+      // ["أودو"] outright rather than merged onto whatever was there before —
+      // merging let stale/demo placeholder names (e.g. "سلة"، "زد"، "المستودع"
+      // from before this cell was ever really connected) survive forever
+      // alongside the real one, which is exactly the kind of fabricated
+      // "data source" this app is supposed to never claim.
+      const sources = ["أودو"];
 
       await prisma.$transaction([
         prisma.cell.update({
