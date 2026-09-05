@@ -481,35 +481,35 @@ const COUNCIL_QUESTIONS = [
 
 /* ---------------- بيانات التكاملات ---------------- */
 const INTEGRATIONS = [
-  { id:'salla', name:'سلة', aliases:['سله','salla'], cat:'المتجر الإلكتروني', status:'متصل', sync:'قبل 4 دقائق', reads:['المنتجات والمخزون','الطلبات والمبيعات','بيانات العملاء'], actions:['تعديل الأسعار','تحديث المخزون','تفعيل العروض'],
+  { id:'salla', name:'سلة', aliases:['سله','salla'], cat:'المتجر الإلكتروني', status:'غير متصل', sync:'—', reads:['المنتجات والمخزون','الطلبات والمبيعات','بيانات العملاء'], actions:['تعديل الأسعار','تحديث المخزون','تفعيل العروض'],
     howTo:['من لوحة تحكم سلة، ادخل على «تطبيقات» ثم ابحث عن تطبيق خَلِيّة','اضغط تثبيت التطبيق ووافق على صلاحيات القراءة والتعديل المطلوبة','ستتم المزامنة تلقائياً خلال دقائق وتبدأ الخلايا بقراءة بياناتك فوراً'] },
   { id:'zid', name:'زد', aliases:['zid'], cat:'المتجر الإلكتروني', status:'غير متصل', sync:'—', reads:[], actions:[],
     howTo:['من لوحة تحكم زد، ادخل على «متجر التطبيقات» وابحث عن خَلِيّة','ثبّت التطبيق ووافق على أذونات الربط','اختر البيانات التي ترغب بمشاركتها ثم فعّل المزامنة'] },
-  { id:'accounting', name:'برنامج المحاسبة', aliases:['محاسبة','قوى','قيود'], cat:'المحاسبة', status:'متصل', sync:'قبل ساعة', reads:['الفواتير والمصروفات','الضرائب والتكاليف التشغيلية'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
+  { id:'accounting', name:'برنامج المحاسبة', aliases:['محاسبة','قوى','قيود'], cat:'المحاسبة', status:'غير متصل', sync:'—', reads:['الفواتير والمصروفات','الضرائب والتكاليف التشغيلية'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
     howTo:['من إعدادات برنامج المحاسبة، افتح قسم «الربط مع تطبيقات خارجية»','أنشئ مفتاح API وألصقه في صفحة التكاملات هنا','حدد الفواتير والحسابات التي تسمح لخَلِيّة بقراءتها'] },
   { id:'odoo', name:'أودو (Odoo)', aliases:['odoo','اودو','erp'], cat:'نظام تخطيط موارد المؤسسة ERP', status:'غير متصل', sync:'—',
     reads:['المخزون والمستودعات','الفواتير والحسابات','الطلبات والمبيعات','بيانات العملاء (CRM)','الشحن والتسليم'],
     actions:['اقتراح تعديل سعر (بموافقتك)','اقتراح طلب تزويد مخزون (بموافقتك)'],
     howTo:['من إعدادات أودو، فعّل وحدة «Webhooks / API External Access»','أنشئ مستخدم API مخصص لخَلِيّة وحدّد صلاحياته بدقة','أدخل رابط الخادم ومفتاح API في صفحة التكاملات هنا لبدء المزامنة'] },
-  { id:'payment', name:'بوابة الدفع', aliases:['مدى','دفع','payment','payfort','moyasar'], cat:'المدفوعات', status:'متصل', sync:'قبل 12 دقيقة', reads:['عمليات الدفع والرسوم','العمليات المرفوضة'], actions:['تفعيل وسيلة دفع جديدة'],
+  { id:'payment', name:'بوابة الدفع', aliases:['مدى','دفع','payment','payfort','moyasar'], cat:'المدفوعات', status:'غير متصل', sync:'—', reads:['عمليات الدفع والرسوم','العمليات المرفوضة'], actions:['تفعيل وسيلة دفع جديدة'],
     howTo:['من لوحة تحكم بوابة الدفع، افتح قسم «المطورين / API Keys»','انسخ مفتاح API للقراءة فقط وألصقه هنا','فعّل إشعارات العمليات (Webhooks) لتصل بياناتها فوراً'] },
-  { id:'shipping1', name:'شركة الشحن الرئيسية', aliases:['شحن','سمسا','ارامكس','aramex','smsa'], cat:'الشحن', status:'يحتاج إلى تحديث', sync:'قبل يومين', reads:['حالة الطلبات','مدة التسليم'], actions:['تحديث إعدادات الشحن'],
-    howTo:['ادخل على حساب شركة الشحن التجاري وفعّل الربط عبر API','انسخ رمز الاعتماد (Token) وأدخله في إعدادات هذا التكامل','راجع حالة الاتصال هنا — التكامل الحالي بحاجة لتحديث بيانات الاعتماد'] },
+  { id:'shipping1', name:'شركة الشحن الرئيسية', aliases:['شحن','سمسا','ارامكس','aramex','smsa'], cat:'الشحن', status:'غير متصل', sync:'—', reads:['حالة الطلبات','مدة التسليم'], actions:['تحديث إعدادات الشحن'],
+    howTo:['ادخل على حساب شركة الشحن التجاري وفعّل الربط عبر API','انسخ رمز الاعتماد (Token) وأدخله في إعدادات هذا التكامل','بعد الربط ستظهر حالة الاتصال هنا فوراً'] },
   { id:'shipping2', name:'شركة شحن بديلة', aliases:['شحن بديل'], cat:'الشحن', status:'غير متصل', sync:'—', reads:[], actions:[],
     howTo:['افتح حساب التاجر لدى شركة الشحن البديلة وفعّل «واجهة API للشركاء»','انسخ مفتاح الربط وأدخله في صفحة التكاملات هنا','اختبر الربط بإرسال طلب تجريبي قبل الاعتماد الكامل'] },
-  { id:'whatsapp', name:'واتساب للأعمال', aliases:['واتس','whatsapp','واتساب'], cat:'التواصل', status:'توجد مشكلة', sync:'قبل 6 أيام', reads:['محادثات الدعم'], actions:['إرسال رسائل تلقائية'],
-    howTo:['من Meta Business Suite، فعّل واتساب للأعمال (WhatsApp Business API)','اربط رقم الأعمال واحصل على رمز الوصول (Access Token)','أدخل الرمز هنا — التكامل الحالي يواجه مشكلة وتحتاج لتجديد الرمز'] },
-  { id:'sms', name:'الرسائل النصية', aliases:['sms','رسائل'], cat:'التواصل', status:'متصل', sync:'قبل 40 دقيقة', reads:['حالة إرسال الرسائل'], actions:['إرسال تنبيهات الطلبات'],
+  { id:'whatsapp', name:'واتساب للأعمال', aliases:['واتس','whatsapp','واتساب'], cat:'التواصل', status:'غير متصل', sync:'—', reads:['محادثات الدعم'], actions:['إرسال رسائل تلقائية'],
+    howTo:['من Meta Business Suite، فعّل واتساب للأعمال (WhatsApp Business API)','اربط رقم الأعمال واحصل على رمز الوصول (Access Token)','أدخل الرمز هنا لبدء الربط'] },
+  { id:'sms', name:'الرسائل النصية', aliases:['sms','رسائل'], cat:'التواصل', status:'غير متصل', sync:'—', reads:['حالة إرسال الرسائل'], actions:['إرسال تنبيهات الطلبات'],
     howTo:['أنشئ حساباً لدى مزود رسائل SMS معتمد داخل السعودية','فعّل اسم مرسل (Sender Name) خاص بمتجرك','أدخل مفتاح API الخاص بالمزود في صفحة التكاملات هنا'] },
-  { id:'ads', name:'منصات الإعلانات', aliases:['اعلانات','سناب','تيك توك','جوجل','فيسبوك','snap','tiktok','google ads','facebook ads'], cat:'التسويق', status:'متصل', sync:'قبل 8 دقائق', reads:['أداء الحملات والإنفاق'], actions:['إيقاف حملة','تعديل الميزانية'],
+  { id:'ads', name:'منصات الإعلانات', aliases:['اعلانات','سناب','تيك توك','جوجل','فيسبوك','snap','tiktok','google ads','facebook ads'], cat:'التسويق', status:'غير متصل', sync:'—', reads:['أداء الحملات والإنفاق'], actions:['إيقاف حملة','تعديل الميزانية'],
     howTo:['ادخل على مدير الأعمال لكل منصة إعلانية (سناب، تيك توك، جوجل...)','فعّل وصول API واختر حساب الإعلانات المرتبط بمتجرك','امنح خَلِيّة صلاحية قراءة الأداء وتعديل الميزانية عند الحاجة'] },
-  { id:'analytics', name:'تحليلات الزوار', aliases:['analytics','جوجل انالتكس','google analytics'], cat:'التحليلات', status:'متصل', sync:'قبل 15 دقيقة', reads:['سلوك الزوار وصفحات الدخول'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
+  { id:'analytics', name:'تحليلات الزوار', aliases:['analytics','جوجل انالتكس','google analytics'], cat:'التحليلات', status:'غير متصل', sync:'—', reads:['سلوك الزوار وصفحات الدخول'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
     howTo:['من حساب أداة التحليلات، أنشئ خاصية (Property) خاصة بالمتجر إن لم تكن موجودة','فعّل وصول API وامنح صلاحية قراءة فقط لحساب خَلِيّة','تأكد من تثبيت كود القياس على جميع صفحات المتجر'] },
-  { id:'speed', name:'قياس سرعة الموقع', aliases:['سرعة','pagespeed'], cat:'الأداء التقني', status:'متصل', sync:'قبل 3 ساعات', reads:['سرعة تحميل الصفحات'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
+  { id:'speed', name:'قياس سرعة الموقع', aliases:['سرعة','pagespeed'], cat:'الأداء التقني', status:'غير متصل', sync:'—', reads:['سرعة تحميل الصفحات'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
     howTo:['لا يحتاج هذا التكامل إعداداً من طرفك — يعمل تلقائياً بمجرد ربط رابط المتجر','تأكد أن رابط المتجر الأساسي صحيح في إعدادات الحساب','ستبدأ القياسات الدورية للسرعة خلال ساعات من التفعيل'] },
-  { id:'support', name:'خدمة العملاء', aliases:['دعم','زينداسك','zendesk'], cat:'دعم العملاء', status:'يحتاج إلى تحديث', sync:'أمس', reads:['محادثات ومحتوى الشكاوى'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
-    howTo:['من إعدادات نظام دعم العملاء، فعّل «تطبيقات ووصول API»','أنشئ مفتاح وصول للقراءة فقط لمحادثات الدعم','أدخله هنا — التكامل الحالي بحاجة لتحديث صلاحياته'] },
-  { id:'reviews', name:'منصة التقييمات', aliases:['تقييمات','ريفيوز','reviews'], cat:'رضا العملاء', status:'متصل', sync:'قبل ساعتين', reads:['تقييمات المنتجات'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
+  { id:'support', name:'خدمة العملاء', aliases:['دعم','زينداسك','zendesk'], cat:'دعم العملاء', status:'غير متصل', sync:'—', reads:['محادثات ومحتوى الشكاوى'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
+    howTo:['من إعدادات نظام دعم العملاء، فعّل «تطبيقات ووصول API»','أنشئ مفتاح وصول للقراءة فقط لمحادثات الدعم','أدخله هنا لبدء الربط'] },
+  { id:'reviews', name:'منصة التقييمات', aliases:['تقييمات','ريفيوز','reviews'], cat:'رضا العملاء', status:'غير متصل', sync:'—', reads:['تقييمات المنتجات'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
     howTo:['من حساب منصة التقييمات، فعّل «واجهة API» أو تصدير البيانات','انسخ مفتاح الربط الخاص بمتجرك','أدخله هنا لتبدأ خَلِيّة بقراءة تقييمات المنتجات تلقائياً'] },
 ];
 const INT_STATUS_META = {
@@ -823,31 +823,44 @@ function renderTopbar(){
         onkeydown="if(event.key==='Enter'){STATE.search=this.value; location.hash='#decisions'; router();}" />
     </div>
     <div class="topbar-spacer"></div>
-    <div class="sync-pill"><span class="blip"></span> متصل ومتزامن — سلة</div>
+    ${syncPillHtml()}
     <button class="icon-btn" title="تبديل المظهر" onclick="cycleTheme()">${icon(themeIcon)}</button>
-    <button class="icon-btn" id="bellBtn" onclick="toggleNotifPanel()">${icon('bell')}<span class="badge-dot"></span></button>
+    <button class="icon-btn" id="bellBtn" style="position:relative" onclick="toggleNotifPanel()">${icon('bell')}${notifBadgeHtml()}</button>
     <div class="user-chip" onclick="location.hash='#settings'">
-      <div class="avatar">عبد</div>
-      <div class="user-meta"><div class="u-name">عبدالإله</div><div class="u-store">متجر أثارة للعطور</div></div>
+      <div class="avatar">${(AUTH.name||'؟').trim().slice(0,2)}</div>
+      <div class="user-meta"><div class="u-name">${AUTH.name||'حسابك'}</div><div class="u-store">${AUTH.storeName||'متجرك'}</div></div>
     </div>
   `;
 }
 
+/* شريط "متصل ومتزامن" في أعلى الصفحة — كان نصاً ثابتاً يدّعي ربطاً بـ"سلة"
+   بغض النظر عن الواقع؛ الآن يعكس حالة أودو الحقيقية فقط (المنصة الحقيقية
+   الوحيدة المرتبطة فعلياً حتى الآن). */
+function syncPillHtml(){
+  const odoo = getRealIntegration('odoo');
+  if(odoo && odoo.status==='CONNECTED'){
+    return `<div class="sync-pill"><span class="blip"></span> متصل ومتزامن — أودو</div>`;
+  }
+  return `<div class="sync-pill" style="background:var(--surface-2);color:var(--muted)">لا يوجد ربط نشط حالياً</div>`;
+}
+
+/* لوحة الإشعارات — كانت تعرض 3 عناصر وهمية ثابتة بغض النظر عن نشاط المتجر
+   الحقيقي؛ الآن تُبنى من ACTIVITY_FEED الحقيقي القادم من الخادم. */
+function notifBadgeHtml(){
+  return ACTIVITY_FEED.length ? `<span class="badge-dot"></span>` : '';
+}
 function toggleNotifPanel(){
   let p = document.getElementById('notifPanel');
   if(p){ p.remove(); return; }
   p = document.createElement('div'); p.id='notifPanel';
   p.style.cssText = 'position:absolute;left:26px;top:60px;width:320px;background:var(--surface);border:1px solid var(--border-soft);border-radius:14px;box-shadow:var(--shadow-lg);z-index:60;overflow:hidden';
-  const items = [
-    {ic:'warn', c:'risk', t:'مخزون «سيروم فيتامين C» سينفد خلال 9 أيام', time:'قبل 11 دقيقة'},
-    {ic:'pricing', c:'accent', t:'فرصة جديدة: رفع سعر «عطر عود ملكي» بأمان', time:'قبل ساعة'},
-    {ic:'pulse', c:'alert', t:'تراجع درجة صحة الموقع إلى 69/100', time:'قبل 3 ساعات'},
-  ];
+  const items = ACTIVITY_FEED.slice(-8).reverse();
   p.innerHTML = `<div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);font-weight:700;font-size:13.5px">الإشعارات</div>
-    ${items.map(n=>`<div style="display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border-soft)">
-      <div class="avatar-cell" style="width:30px;height:30px;flex:0 0 30px;background:var(--${n.c}-soft);color:var(--${n.c})">${icon(n.ic)}</div>
-      <div><div style="font-size:12.5px;line-height:1.6">${n.t}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${n.time}</div></div>
-    </div>`).join('')}
+    ${items.length ? items.map(a=>{ const c = CELL(a.cellId); if(!c) return ''; return `
+    <div style="display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border-soft)">
+      <div class="avatar-cell" style="width:30px;height:30px;flex:0 0 30px;background:var(--${c.color}-soft);color:var(--${c.color})">${icon(c.icon)}</div>
+      <div><div style="font-size:12.5px;line-height:1.6">${escapeHtml(a.text)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${escapeHtml(a.time||'')}</div></div>
+    </div>`; }).join('') : `<div style="padding:22px 16px;text-align:center;font-size:12.5px;color:var(--muted)">لا توجد إشعارات جديدة حالياً</div>`}
     <div style="padding:10px 16px;text-align:center"><button class="btn btn-ghost btn-sm" onclick="location.hash='#decisions';document.getElementById('notifPanel').remove()">عرض كل القرارات</button></div>`;
   document.getElementById('topbar').style.position='relative';
   document.getElementById('topbar').appendChild(p);
@@ -943,7 +956,7 @@ function renderOverview(){
   return `
     <div class="card org-chart">
       <div class="org-welcome">
-        <div class="org-welcome-title">صباح الخير، سيّد <b>عبدالإله</b>… أسعد الله صباحك ونوّرتنا!</div>
+        <div class="org-welcome-title">${getGreeting()}، <b>${AUTH.name||'صديقنا'}</b>… أسعد الله وقتك ونوّرتنا!</div>
         <p class="org-welcome-sub">قادة الخلايا ومديروها سعداء برؤيتك اليوم. يمكنك الآن استعراض الملخّص اليومي لكل خلية، ومراجعة القرارات التي دُرست بالتعاون بين الخلايا المعنية، أو طرح قرار جديد؛ لتجتمع الخلايا المختصة، وتوافيك بخلاصة الدراسة وأفضل التوصيات.</p>
       </div>
       <div class="org-leader">
@@ -968,9 +981,9 @@ function renderOverview(){
           <h1 class="view-title" style="margin-bottom:3px">قائد الخلايا</h1>
           <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">المساعد التنفيذي للتاجر</div>
           <div class="ov-lead-msg">
-            <div>${getGreeting()} عبدالإله، معك قائد الخلايا العاملة.</div>
+            <div>${getGreeting()} ${AUTH.name||'صديقنا'}، معك قائد الخلايا العاملة.</div>
             <div>${summaryLine}</div>
-            <div>الصحة العامة للمتجر حالياً <b class="num" style="color:var(--${scoreColor(health)})">${health} من 100</b> — ${healthWord(health)}، وأرباحنا منذ بداية الشهر <b class="num" style="color:var(--good-strong)">186,420 ر.س</b>.</div>
+            <div>الصحة العامة للمتجر حالياً <b class="num" style="color:var(--${scoreColor(health)})">${health} من 100</b> — ${healthWord(health)}.</div>
           </div>
         </div>
 
@@ -1011,6 +1024,12 @@ const LEADER_QA = [
 function renderLeader(){
   const ranked = [...DECISIONS].filter(d=>d.status==='ينتظر الموافقة').sort((a,b)=> (b.confidence*Math.abs(b.impact||1)) - (a.confidence*Math.abs(a.impact||1)) ).slice(0,6);
   const conflicts = DECISIONS.filter(d=>d.oppose.length>0);
+  const avgHealth = Math.round(CELLS.reduce((a,c)=>a+c.score,0)/CELLS.length);
+  // الملخص اليومي كان نصاً ثابتاً يختلق "فرصاً" ومنتجات لم تُرصد فعلياً؛
+  // الآن يُبنى من القرارات والتعارضات الحقيقية المحسوبة أعلاه فقط.
+  const summarySentence = ranked.length
+    ? `لديك حالياً ${ranked.length} ${ranked.length===1?'قرار ينتظر':'قرارات تنتظر'} موافقتك، أعلاها أولوية «${ranked[0].title}»${conflicts.length? '، ويوجد '+conflicts.length+' '+(conflicts.length===1?'قرار به تعارض':'قرارات بها تعارض')+' بين الخلايا يستحق مراجعتك':''}.`
+    : 'لا توجد حالياً قرارات تنتظر موافقتك — لم ترصد الخلايا ما يستدعي تدخلاً عاجلاً في الوقت الحالي.';
   return `
     <div class="view-head">
       <div><div class="eyebrow">المساعد التنفيذي للتاجر</div><h1 class="view-title">قائد الخلية</h1>
@@ -1021,9 +1040,7 @@ function renderLeader(){
       <div class="avatar-cell" style="width:44px;height:44px;flex:0 0 44px;background:var(--accent-soft);color:var(--accent-strong)">${icon('captain')}</div>
       <div>
         <div style="font-weight:700;font-size:14px;margin-bottom:6px">الملخص اليومي</div>
-        <p style="font-size:13.5px;line-height:2;color:var(--text-2)">صباح الخير، اكتشفت الخلايا اليوم ثلاث فرص مهمة: منتجان يحتاجان إلى إعادة طلب مخزون، وإعلان يستهلك الميزانية دون مبيعات كافية،
-        وبطء في صفحة الدفع قد يؤثر في إكمال الطلبات. الأولوية المقترحة هي معالجة صفحة الدفع، لأن أثرها يشمل جميع مصادر المبيعات.
-        بشكل عام، صحة المتجر مستقرة عند ${Math.round(CELLS.reduce((a,c)=>a+c.score,0)/CELLS.length)} من 100، وأداء الربحية يتحسن تدريجياً رغم ضغط بسيط على الهامش.</p>
+        <p style="font-size:13.5px;line-height:2;color:var(--text-2)">${summarySentence} بشكل عام، صحة المتجر حالياً ${avgHealth} من 100.</p>
       </div>
     </div>
 
@@ -1541,60 +1558,52 @@ function renderCellDetail(id){
     <div class="grid g-3">${related.map(d=>decisionCard(d)).join('') || `<div class="empty" style="grid-column:1/-1">لا توجد قرارات مرتبطة حالياً</div>`}</div>
   `;
 }
+/* لا يوجد بعد خط أنابيب قياس فعلي لتفاصيل صحة الموقع (سرعة، تجربة جوال...)،
+   وكانت هذه الأرقام وبطاقة "مثال التوصية" ثابتة تماماً بغض النظر عن أي بيانات
+   حقيقية. الآن نوضح صراحة أن هذا التفصيل غير متاح إلى أن تُربط أدوات القياس
+   المعنية (قياس السرعة، تحليلات الزوار...) من صفحة التكاملات، بدل اختلاق أرقام. */
 function renderPulseExtra(){
-  const dims = [
-    {l:'الحالة البصرية', v:74}, {l:'تجربة الجوال', v:61}, {l:'السرعة', v:58},
-    {l:'رحلة الشراء', v:72}, {l:'رضا العملاء', v:80}, {l:'جاهزية التكاملات', v:66},
-  ];
+  const speedInt = getRealIntegration('speed');
+  const analyticsInt = getRealIntegration('analytics');
+  const speedOk = speedInt && speedInt.status==='CONNECTED';
+  const analyticsOk = analyticsInt && analyticsInt.status==='CONNECTED';
+  if(speedOk && analyticsOk){
+    return `
+    <div class="card card-pad" style="margin-bottom:14px">
+      <div class="section-title"><span>تفصيل درجة صحة الموقع</span></div>
+      <p style="font-size:12.5px;color:var(--text-2);line-height:1.9">أدوات القياس مربوطة، وتفصيل الدرجة إلى أبعاد فرعية (السرعة، تجربة الجوال، رحلة الشراء...) قيد الإعداد وسيظهر هنا قريباً.</p>
+    </div>`;
+  }
   return `
   <div class="card card-pad" style="margin-bottom:14px">
-    <div class="section-title"><span>تفصيل درجة صحة الموقع</span><span style="font-size:11.5px;color:var(--muted)">آخر فحص: اليوم 06:10 ص</span></div>
-    <div class="grid g-3" style="gap:12px">
-      ${dims.map(d=>`
-        <div>
-          <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span>${d.l}</span><span class="num" style="font-weight:700">${d.v}</span></div>
-          <div class="progress"><i style="width:${d.v}%;background:var(--${scoreColor(d.v)})"></i></div>
-        </div>`).join('')}
-    </div>
-    <div class="divider"></div>
-    <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface-2);border-radius:12px;padding:14px">
-      <div class="avatar-cell" style="background:var(--accent-soft);color:var(--accent-strong)">${icon('whatsapp')}</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:13.5px;margin-bottom:4px">مثال توصية: ربط واتساب</div>
-        <p style="font-size:12.5px;line-height:1.9;color:var(--text-2)">اكتشفت خلية صحة الموقع أن زر واتساب غير متوفر، بينما يتكرر سؤال العملاء عن مدة التوصيل قبل الشراء.
-        تقترح الخلية ربط واتساب وإضافة رسالة تلقائية توضح خيارات الشحن. الأثر المتوقع: تقليل تردد العملاء ورفع فرص إكمال الطلب.</p>
-        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-          <span class="chip chip-accent">أولوية: عاجل</span><span class="chip chip-info">ثقة: 74%</span><span class="chip chip-muted">تكلفة تنفيذ: منخفضة</span>
-        </div>
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="openDecisionModal('d4')">التفاصيل</button>
-    </div>
+    <div class="section-title"><span>${icon('warn')} تفصيل درجة صحة الموقع</span></div>
+    <p style="font-size:12.5px;color:var(--text-2);line-height:1.9">الدرجة الإجمالية أعلاه مبنية على البيانات المتاحة حالياً فقط. تفصيلها إلى أبعاد فرعية دقيقة (السرعة، تجربة الجوال، رحلة الشراء...) يحتاج ربط أدوات قياس حقيقية — ${speedOk?'':'قياس سرعة الموقع'}${(!speedOk && !analyticsOk)?' و':''}${analyticsOk?'':'تحليلات الزوار'} — غير مربوطة بعد.</p>
+    <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="location.hash='#integrations'">${icon('grid')} إدارة التكاملات</button>
   </div>`;
 }
 
-const DATA_GAPS = [
-  { cellId:'competitors', need:'قائمة محدّثة بالمنافسين المستهدفين وأسعارهم الحالية، لرفع دقة المقارنة السعرية.' },
-  { cellId:'customers', need:'ربط بيانات برنامج الولاء (إن وجد) لقياس القيمة الحقيقية للعميل المتكرر بدقة أكبر.' },
-  { cellId:'inventory', need:'تكلفة التوريد الفعلية لكل مورد على حدة، بدل التكلفة التقديرية الموحّدة المستخدمة حالياً.' },
-];
+/* قائمة الخلايا التي تحتاج مصدر بيانات — محسوبة مباشرة من حقل sources
+   الحقيقي لكل خلية بدل قائمة ثابتة مختلقة؛ خلية بلا مصادر مربوطة = فجوة
+   بيانات حقيقية، وتختفي من هنا تلقائياً بمجرد ربط مصدر فعلي لها. */
 function renderQualityExtra(){
+  const gaps = CELLS.filter(c => !Array.isArray(c.sources) || c.sources.length===0);
   return `
   <div class="card card-pad" style="margin-bottom:14px">
-    <div class="section-title"><span>${icon('warn')} الخلايا التي بحاجة إلى بيانات إضافية</span></div>
-    <p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">رصدت خلية جودة القرار أن دقة بعض التوصيات ما زالت محدودة بسبب نقص بيانات معينة. سد هذه الفجوات يرفع مستوى الثقة في قرارات الخلايا التالية.</p>
+    <div class="section-title"><span>${icon('warn')} الخلايا التي بحاجة إلى مصدر بيانات</span></div>
+    <p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">دقة توصيات أي خلية ترتبط مباشرة بوجود مصدر بيانات حقيقي يغذّيها. الخلايا التالية ليس لديها أي مصدر بيانات مربوط حالياً، لذا فتوصياتها تقديرية إلى أن تُربط.</p>
     <div style="display:flex;flex-direction:column;gap:10px">
-      ${DATA_GAPS.map(g=>{ const c = CELL(g.cellId); return `
+      ${gaps.length ? gaps.map(c=>`
       <div style="display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border-soft);border-radius:12px;padding:12px;flex-wrap:wrap">
         <div class="avatar-cell" style="background:var(--${c.color}-soft);color:var(--${c.color})">${icon(c.icon)}</div>
         <div style="flex:1;min-width:200px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="font-weight:700;font-size:13px">${c.name}</span>
-            <span class="chip chip-alert">بيانات ناقصة</span>
+            <span style="font-weight:700;font-size:13px">${escapeHtml(c.name)}</span>
+            <span class="chip chip-alert">لا يوجد مصدر بيانات</span>
           </div>
-          <p style="font-size:12.5px;line-height:1.8;color:var(--text-2)">${g.need}</p>
+          <p style="font-size:12.5px;line-height:1.8;color:var(--text-2)">لم يتم ربط أي مصدر بيانات حقيقي بهذه الخلية بعد.</p>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="toast('تم إرسال طلب البيانات لك — يمكنك تزويد ${c.name} بها من إعدادات التكاملات')">طلب البيانات</button>
-      </div>`; }).join('')}
+        <button class="btn btn-ghost btn-sm" onclick="location.hash='#integrations'">ربط مصدر بيانات</button>
+      </div>`).join('') : `<div class="empty">جميع الخلايا مرتبطة بمصدر بيانات واحد على الأقل حالياً</div>`}
     </div>
   </div>`;
 }
@@ -1656,7 +1665,7 @@ function openAutomationPreview(id){
       <div><b>ما النتيجة المتوقعة؟</b><div style="color:var(--text-2)">${d.impactLabel}</div></div>
       <div><b>ما المخاطر؟</b><div style="color:var(--text-2)">مستوى المخاطرة: ${d.risk}</div></div>
       <div><b>هل يمكن التراجع؟</b><div style="color:var(--text-2)">نعم، يمكن التراجع تلقائياً إذا لم تتحقق النتيجة المتوقعة خلال فترة القياس.</div></div>
-      <div><b>ما الصلاحيات المطلوبة؟</b><div style="color:var(--text-2)">صلاحية تعديل البيانات المرتبطة عبر تكامل ${INTEGRATIONS[0].name}.</div></div>
+      <div><b>ما الصلاحيات المطلوبة؟</b><div style="color:var(--text-2)">${(()=>{ const odoo=getRealIntegration('odoo'); return odoo && odoo.status==='CONNECTED' ? 'صلاحية تعديل البيانات المرتبطة عبر تكامل أودو (Odoo).' : 'صلاحية تعديل البيانات المرتبطة عبر التكامل الذي يغذّي هذه الخلية ببياناتها (بعد ربطه من صفحة التكاملات).'; })()}</div></div>
     </div>
     <div class="divider"></div>
     <div style="display:flex;gap:8px">
@@ -1690,9 +1699,11 @@ function integrationCard(i){
   const m = INT_STATUS_META[status];
   const connected = status !== 'غير متصل';
   const btnLabel = isReal ? (connected ? 'إدارة الربط' : 'ربط الآن') : (status==='غير متصل'?'ربط الآن':'إدارة التكامل');
+  // التكاملات غير أودو ليس لها بعد خلفية ربط حقيقية في هذا الإصدار (بيانات
+  // توضيحية فقط)، فالزر يوضّح ذلك صراحة بدل الإيحاء بأن الربط بدأ فعلاً.
   const btnOnclick = isReal
     ? (connected ? `openOdooManageModal('${i.id}')` : `openOdooConnectModal('${i.id}')`)
-    : `toast('${status==='غير متصل'?'بدء إعداد الربط مع '+i.name:'فتح إعدادات '+i.name}')`;
+    : `toast('ربط ${i.name} غير متاح بعد في هذا الإصدار — سيُضاف قريباً')`;
   return `
   <div class="card card-pad" style="margin-bottom:14px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px;flex-wrap:wrap">
@@ -2189,7 +2200,7 @@ function cellReportCard(c){
           <div style="font-size:11px;color:var(--muted)">${c.tagline}</div>
         </div>
       </div>
-      <span class="see-all" onclick="toast('سيتم إرسال تقرير ${c.name} إلى بريدك الإلكتروني')">تصدير PDF</span>
+      <span class="see-all" onclick="toast('ميزة تصدير التقارير كملف PDF قيد التطوير ولم تُفعّل بعد')">تصدير PDF</span>
     </div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
       <div style="position:relative;width:56px;height:56px;flex:0 0 56px">${scoreRing(c.score,56,sc)}
@@ -2218,7 +2229,7 @@ function renderReports(){
     <div class="grid g-2" style="margin-bottom:20px">
       ${getReports().map(r=>`
       <div class="card card-pad">
-        <div class="section-title"><span>${r.name}</span><span class="see-all" onclick="toast('سيتم إرسال التقرير إلى بريدك الإلكتروني')">تصدير PDF</span></div>
+        <div class="section-title"><span>${r.name}</span><span class="see-all" onclick="toast('ميزة تصدير التقارير كملف PDF قيد التطوير ولم تُفعّل بعد')">تصدير PDF</span></div>
         <p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">${r.desc}</p>
         ${barsChart(r.chart, r.color, 90)}
       </div>`).join('')}
@@ -2246,10 +2257,9 @@ function renderSettings(){
       <div class="card card-pad">
         <div class="section-title"><span>بيانات المتجر</span></div>
         <div style="display:flex;flex-direction:column;gap:12px;font-size:13px">
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">اسم المتجر</span><b>متجر أثارة للعطور</b></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">منصة التجارة</span><b>سلة</b></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">خطة الاشتراك</span><b>احترافي</b></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">عدد أعضاء الفريق</span><b class="num">3 أعضاء</b></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">اسم المتجر</span><b>${escapeHtml(AUTH.storeName||'—')}</b></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">البريد الإلكتروني للحساب</span><b>${escapeHtml(AUTH.email||'—')}</b></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">التكامل الرئيسي المرتبط</span><b>${(()=>{ const odoo=getRealIntegration('odoo'); return odoo && odoo.status==='CONNECTED' ? 'أودو (Odoo)' : 'لا يوجد ربط نشط بعد'; })()}</b></div>
         </div>
       </div>
       <div class="card card-pad">
