@@ -158,6 +158,17 @@ export const INTEGRATION_CATALOG: IntegrationCatalogEntry[] = [
     ],
   },
   {
+    id: "marketsearch",
+    name: "رصد الأسعار والمنافسين",
+    aliases: ["serpapi", "بحث", "منافسين", "اسعار المنافسين", "market search"],
+    category: "رصد السوق",
+    howTo: [
+      "أنشئ حساباً على serpapi.com واحصل على مفتاح API من صفحة «Manage API Key»",
+      "أدخل المفتاح هنا لتفعيل بحث الأسعار الحقيقي عبر جوجل شوبينج",
+      "أضف المنتجات/المنافسين الذين تريد متابعتهم من صفحة خلية «رصد وتحليل السوق»، وستُجلب أسعارهم الحقيقية عند كل تحديث",
+    ],
+  },
+  {
     id: "reviews",
     name: "منصة التقييمات",
     aliases: ["تقييمات", "ريفيوز", "reviews"],

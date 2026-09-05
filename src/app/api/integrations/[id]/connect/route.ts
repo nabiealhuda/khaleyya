@@ -8,7 +8,7 @@ import { IntegrationConfigError } from "@/lib/integrations/types";
 import { encryptJson } from "@/lib/crypto";
 import { logger } from "@/lib/logger";
 import { odooAuthenticate, parseOdooConfig } from "@/lib/integrations/odoo-client";
-import { syncOdooCells, CellSyncOutcome } from "@/lib/integrations/odoo-sync";
+import { syncOdooEverything, OdooFullSyncResult } from "@/lib/integrations/odoo-sync";
 
 type RouteCtx = { params: Promise<{ id: string }> };
 
@@ -71,14 +71,14 @@ export const POST = withRoute<RouteCtx>(
     // failure here must not undo or fail the connection itself, since
     // authentication already succeeded above — the merchant is connected
     // either way, and can retry the sync from the Integrations page.
-    let cellSyncOutcomes: CellSyncOutcome[] | undefined;
+    let fullSync: OdooFullSyncResult | undefined;
     if (id === "odoo") {
       try {
         const cfg = parseOdooConfig(parsed.data.config);
         const uid = await odooAuthenticate(cfg);
-        cellSyncOutcomes = await syncOdooCells(ctx.storeId, cfg, uid);
+        fullSync = await syncOdooEverything(ctx.storeId, cfg, uid);
       } catch (err) {
-        logger.error({ err, storeId: ctx.storeId }, "initial odoo cell sync after connect failed");
+        logger.error({ err, storeId: ctx.storeId }, "initial odoo full sync after connect failed");
       }
     }
 
@@ -91,7 +91,10 @@ export const POST = withRoute<RouteCtx>(
       },
       reads: result.reads,
       actions: result.actions,
-      cellSyncOutcomes,
+      cellSyncOutcomes: fullSync?.cellOutcomes,
+      storeName: fullSync?.storeName,
+      productsSynced: fullSync?.products.count,
+      newPricingDecisions: fullSync?.newPricingDecisions,
     });
   },
   { rateLimit: { limit: 10, windowMs: 60_000 } }

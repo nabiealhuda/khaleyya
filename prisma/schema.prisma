@@ -21,6 +21,16 @@ model Store {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // Set once, the first time prisma/seed.ts ever runs for this store (on
+  // creation for a new store, or retroactively for a store that already
+  // existed before this field was added). Seed.ts uses this - not the
+  // current row counts - to decide whether its one-time demo content
+  // (Decisions/Automations/CellTasks/ActivityItem) still needs inserting.
+  // Without this, a merchant who deletes all demo decisions would see them
+  // silently reappear on the next deploy, because seed.ts used to check
+  // "count === 0" as its only signal, and a deliberate deletion also makes
+  // the count 0.
+  demoSeededAt DateTime?
 
   users        User[]
   cells        Cell[]
@@ -31,6 +41,8 @@ model Store {
   meetingMsgs  MeetingMessage[]
   integrations IntegrationConnection[]
   sessions     Session[]
+  competitors  CompetitorEntry[]
+  products     Product[]
 }
 
 enum UserRole {
@@ -238,5 +250,46 @@ model IntegrationConnection {
   updatedAt  DateTime          @updatedAt
 
   @@unique([storeId, providerId])
+  @@index([storeId])
+}
+
+// ---------------------------------------------------------------------------
+// Market intelligence & product catalog — real data only, never fabricated.
+// CompetitorEntry: merchant-entered competitor products/stores the "رصد
+// وتحليل السوق" cell actually fetches (best-effort) before writing an
+// insight. Product: synced verbatim from a connected commerce/ERP platform
+// (currently Odoo) — feeds the "المنتجات" page and the pricing/purchasing
+// cells' real per-product analysis (e.g. stagnant + overpriced detection).
+// ---------------------------------------------------------------------------
+
+model CompetitorEntry {
+  id            String    @id @default(cuid())
+  storeId       String
+  store         Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  label         String // the merchant's own name for this competitor/product
+  url           String    @db.Text
+  lastCheckedAt DateTime?
+  lastTitle     String?
+  lastPrice     String? // raw text found on the page — currency varies, never parsed/assumed
+  lastError     String? // last fetch/parse failure, shown honestly instead of a stale silent success
+  createdAt     DateTime  @default(now())
+
+  @@index([storeId])
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  odooId       Int // product.product id in the connected Odoo instance
+  sku          String?
+  name         String
+  price        Float
+  qtyAvailable Int
+  salesLast30  Int      @default(0) // units sold in the last 30 days — real sales velocity
+  imageDataUrl String?  @db.Text // small product image as a data: URI, when Odoo has one
+  updatedAt    DateTime @updatedAt
+
+  @@unique([storeId, odooId])
   @@index([storeId])
 }

@@ -41,3 +41,8 @@ export const meetingMessageSchema = z.object({
 export const connectIntegrationSchema = z.object({
   config: z.record(z.string(), z.unknown()).optional().default({}),
 });
+
+export const createCompetitorEntrySchema = z.object({
+  label: z.string().trim().min(1).max(120),
+  url: z.string().trim().url().max(500),
+});

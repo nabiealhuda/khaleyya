@@ -511,6 +511,9 @@ const INTEGRATIONS = [
     howTo:['من إعدادات نظام دعم العملاء، فعّل «تطبيقات ووصول API»','أنشئ مفتاح وصول للقراءة فقط لمحادثات الدعم','أدخله هنا لبدء الربط'] },
   { id:'reviews', name:'منصة التقييمات', aliases:['تقييمات','ريفيوز','reviews'], cat:'رضا العملاء', status:'غير متصل', sync:'—', reads:['تقييمات المنتجات'], actions:['لا يوجد تنفيذ آلي — قراءة فقط'],
     howTo:['من حساب منصة التقييمات، فعّل «واجهة API» أو تصدير البيانات','انسخ مفتاح الربط الخاص بمتجرك','أدخله هنا لتبدأ خَلِيّة بقراءة تقييمات المنتجات تلقائياً'] },
+  { id:'marketsearch', name:'رصد الأسعار والمنافسين', aliases:['serpapi','بحث','منافسين','اسعار المنافسين','market search'], cat:'رصد السوق', status:'غير متصل', sync:'—',
+    reads:['نتائج بحث المنتجات والأسعار من جوجل شوبينج'], actions:['بحث عن سعر منافس لمنتج تتابعه'],
+    howTo:['أنشئ حساباً على serpapi.com واحصل على مفتاح API من صفحة «Manage API Key»','أدخل المفتاح هنا لتفعيل بحث الأسعار الحقيقي عبر جوجل شوبينج','أضف المنتجات/المنافسين الذين تريد متابعتهم من صفحة خلية «رصد وتحليل السوق»، وستُجلب أسعارهم الحقيقية عند كل تحديث'] },
 ];
 const INT_STATUS_META = {
   'متصل':{chip:'chip-good', dot:'good'}, 'يحتاج إلى تحديث':{chip:'chip-alert', dot:'alert'},
@@ -520,7 +523,7 @@ const INT_STATUS_META = {
 /* منصات فيها ربط فعلي حقيقي (وليس بيانات توضيحية فقط) — حالياً أودو فقط.
    حالتها الحقيقية تأتي من الخادم (STATE.serverIntegrations)، لا من مصفوفة
    INTEGRATIONS الثابتة أعلاه. */
-const REAL_INTEGRATION_IDS = ['odoo'];
+const REAL_INTEGRATION_IDS = ['odoo', 'marketsearch'];
 const REAL_STATUS_LABEL = { CONNECTED:'متصل', DISCONNECTED:'غير متصل', NEEDS_UPDATE:'يحتاج إلى تحديث', ISSUE:'توجد مشكلة' };
 function getRealIntegration(providerId){
   return (STATE.serverIntegrations||[]).find(r=>r.providerId===providerId) || null;
@@ -535,6 +538,7 @@ const AUTO_STATUS_META = {
 
 /* ---------------- حالة التطبيق ---------------- */
 const STATE = { theme:'system', search:'', filter:'الكل', modal:null,
+  competitors:null, competitorsLoading:false, products:null, productsLoading:false,
   meeting: {
     participants: { leader:true, profit:true, inventory:true, pricing:true, quality:true, customers:true, competitors:true, ads:true, pulse:true, purchasing:true, devQuality:true },
     messages: [ { who:'leader', text:'أهلاً بك في غرفة الاجتماعات. اختر أعضاء الاجتماع من الخلايا أدناه، ثم اكتب موضوعك أو تحدّث به مباشرة بالميكروفون، وسأنسّق الرد بينك وبين الخلايا المعنية.' } ],
@@ -776,6 +780,7 @@ const NAV_MAIN = [
 ];
 const NAV_BOTTOM = [
   {hash:'#automation', label:'التنفيذ الآلي', ic:'automation'},
+  {hash:'#products', label:'المنتجات', ic:'inventory'},
   {hash:'#integrations', label:'التكاملات', ic:'integrations'},
   {hash:'#tasks', label:'إعدادات الخلايا', ic:'tasks'},
   {hash:'#reports', label:'التقارير', ic:'reports'},
@@ -1034,6 +1039,9 @@ function renderLeader(){
     <div class="view-head">
       <div><div class="eyebrow">المساعد التنفيذي للتاجر</div><h1 class="view-title">قائد الخلية</h1>
       <p class="view-sub">ينسّق بين جميع الخلايا، يرتب الأولويات، ويشرح لك الأرقام بلغة بسيطة دون مصطلحات معقدة.</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="leaderReviewBtn" onclick="runLeaderFullReview()">${icon('bolt')} مراجعة كاملة للموقع</button>
+      </div>
     </div>
 
     <div class="card card-pad" style="margin-bottom:16px;display:flex;gap:14px">
@@ -1084,6 +1092,28 @@ function renderLeader(){
       </div>
     </div>
   `;
+}
+function runLeaderFullReview(){
+  const btn = document.getElementById('leaderReviewBtn');
+  if(!btn) return;
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = 'جارٍ مراجعة كل الخلايا…';
+  api('/api/leader/review', { method:'POST' })
+    .then(res=>{
+      const count = (res.created||[]).length;
+      const msg = count>0
+        ? `تمت المراجعة ✓ ${res.summary} — تم إضافة ${count} ${count===1?'قرار جديد':'قرارات جديدة'}: ${res.created.join('، ')}`
+        : `تمت المراجعة ✓ ${res.summary}`;
+      toast(msg);
+      return loadStateFromServer();
+    })
+    .then(()=>{ router(); })
+    .catch(err=>{
+      btn.disabled = false;
+      btn.innerHTML = original;
+      toast((err && err.data && err.data.error) || err.message || 'تعذّرت المراجعة — حاول مرة أخرى.');
+    });
 }
 function leaderTypingHtml(id){
   return `<div id="${id}" style="align-self:flex-start;max-width:85%;display:flex;gap:8px">
@@ -1553,6 +1583,7 @@ function renderCellDetail(id){
 
     ${id==='pulse' ? renderPulseExtra() : ''}
     ${id==='quality' ? renderQualityExtra() : ''}
+    ${id==='competitors' ? renderCompetitorsExtra() : ''}
 
     <div class="section-title"><span>قرارات هذه الخلية</span></div>
     <div class="grid g-3">${related.map(d=>decisionCard(d)).join('') || `<div class="empty" style="grid-column:1/-1">لا توجد قرارات مرتبطة حالياً</div>`}</div>
@@ -1585,10 +1616,22 @@ function renderPulseExtra(){
 /* قائمة الخلايا التي تحتاج مصدر بيانات — محسوبة مباشرة من حقل sources
    الحقيقي لكل خلية بدل قائمة ثابتة مختلقة؛ خلية بلا مصادر مربوطة = فجوة
    بيانات حقيقية، وتختفي من هنا تلقائياً بمجرد ربط مصدر فعلي لها. */
+function refreshQualityInsightNow(){
+  const btn = document.getElementById('qualityInsightBtn');
+  if(btn){ btn.disabled = true; btn.innerHTML = 'جارٍ التحديث…'; }
+  api('/api/cells/quality-insight', { method:'POST' })
+    .then(()=> loadStateFromServer())
+    .then(()=>{ toast('تم تحديث تحليل الجودة ✓'); router(); })
+    .catch(err=>{
+      if(btn){ btn.disabled = false; btn.innerHTML = 'تحديث التحليل'; }
+      toast((err && err.data && err.data.error) || err.message || 'تعذّر التحديث — تأكد من وجود قرارات مسجّلة أولاً.');
+    });
+}
 function renderQualityExtra(){
   const gaps = CELLS.filter(c => !Array.isArray(c.sources) || c.sources.length===0);
   return `
   <div class="card card-pad" style="margin-bottom:14px">
+    <div class="section-title" style="justify-content:flex-end;gap:10px"><button class="btn btn-ghost btn-sm" id="qualityInsightBtn" onclick="refreshQualityInsightNow()">${icon('bolt')} تحديث التحليل</button></div>
     <div class="section-title"><span>${icon('warn')} الخلايا التي بحاجة إلى مصدر بيانات</span></div>
     <p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">دقة توصيات أي خلية ترتبط مباشرة بوجود مصدر بيانات حقيقي يغذّيها. الخلايا التالية ليس لديها أي مصدر بيانات مربوط حالياً، لذا فتوصياتها تقديرية إلى أن تُربط.</p>
     <div style="display:flex;flex-direction:column;gap:10px">
@@ -1606,6 +1649,157 @@ function renderQualityExtra(){
       </div>`).join('') : `<div class="empty">جميع الخلايا مرتبطة بمصدر بيانات واحد على الأقل حالياً</div>`}
     </div>
   </div>`;
+}
+
+/* ---------------- منافسو خلية "رصد وتحليل السوق" (قائمة يدوية + بحث خارجي احتياطي) ---------------- */
+function loadCompetitorsIntoState(){
+  STATE.competitorsLoading = true;
+  api('/api/competitors')
+    .then(res=>{
+      STATE.competitors = res.entries;
+      STATE.competitorsLoading = false;
+      const box = document.getElementById('competitorsBox');
+      if(box) box.innerHTML = competitorsBoxInnerHtml();
+    })
+    .catch(()=>{
+      STATE.competitorsLoading = false;
+      STATE.competitors = [];
+      const box = document.getElementById('competitorsBox');
+      if(box) box.innerHTML = competitorsBoxInnerHtml();
+    });
+}
+function competitorsBoxInnerHtml(){
+  const list = STATE.competitors || [];
+  return `
+    <div class="section-title"><span>${icon('competitors')} المنافسون المتابَعون (${list.length}/30)</span>
+      <span class="see-all" onclick="refreshCompetitorsNow()">${icon('bolt')} تحديث الآن</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      ${list.length ? list.map(e=>`
+      <div style="border:1px solid var(--border-soft);border-radius:10px;padding:10px 12px">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:700;font-size:12.5px">${escapeHtml(e.label)}</div>
+            <div style="font-size:11px;color:var(--muted);word-break:break-all" dir="ltr">${escapeHtml(e.url)}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="deleteCompetitorEntry('${e.id}')">${icon('trash')} حذف</button>
+        </div>
+        ${e.lastError ? `<div style="font-size:11.5px;color:var(--risk-strong);margin-top:6px">${escapeHtml(e.lastError)}</div>` :
+          (e.lastTitle||e.lastPrice) ? `<div style="font-size:11.5px;color:var(--text-2);margin-top:6px">${escapeHtml(e.lastTitle||'')}${e.lastPrice?' — '+escapeHtml(e.lastPrice):''}</div>` :
+          `<div style="font-size:11.5px;color:var(--muted);margin-top:6px">لم تُفحص بعد — اضغط «تحديث الآن»</div>`}
+        <div style="font-size:10.5px;color:var(--muted);margin-top:4px">${e.lastCheckedAt ? 'آخر فحص: '+formatRelativeArabic(e.lastCheckedAt) : ''}</div>
+      </div>`).join('') : `<div class="empty">لم تُضف أي منافس بعد</div>`}
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:10px 0 8px">أضف منافساً جديداً (منتج أو متجر منافس تريد متابعة سعره)</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="newCompetitorLabel" placeholder="اسم المنافس أو المنتج" style="${INPUT_STYLE};flex:1;min-width:160px" />
+      <input id="newCompetitorUrl" placeholder="https://example.com/product" style="${INPUT_STYLE};flex:2;min-width:200px" dir="ltr" autocomplete="off" />
+      <button class="btn btn-primary btn-sm" onclick="addCompetitorEntry()">${icon('bolt')} أضف</button>
+    </div>
+    <div id="competitorAddError" style="display:none;font-size:11.5px;color:var(--risk-strong);margin-top:8px"></div>
+  `;
+}
+function addCompetitorEntry(){
+  const labelEl = document.getElementById('newCompetitorLabel');
+  const urlEl = document.getElementById('newCompetitorUrl');
+  const errEl = document.getElementById('competitorAddError');
+  const label = labelEl.value.trim(), url = urlEl.value.trim();
+  if(!label || !url){ errEl.textContent = 'الرجاء تعبئة الاسم والرابط.'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  api('/api/competitors', { method:'POST', body:{ label, url } })
+    .then(res=>{
+      STATE.competitors = [res.entry, ...(STATE.competitors||[])];
+      const box = document.getElementById('competitorsBox');
+      if(box) box.innerHTML = competitorsBoxInnerHtml();
+      toast('تمت إضافة المنافس');
+    })
+    .catch(err=>{
+      errEl.textContent = (err && err.data && err.data.error) || err.message || 'تعذّرت الإضافة — حاول مرة أخرى.';
+      errEl.style.display = 'block';
+    });
+}
+function deleteCompetitorEntry(id){
+  api('/api/competitors/'+id, { method:'DELETE' })
+    .then(()=>{
+      STATE.competitors = (STATE.competitors||[]).filter(e=>e.id!==id);
+      const box = document.getElementById('competitorsBox');
+      if(box) box.innerHTML = competitorsBoxInnerHtml();
+      toast('تم حذف المنافس');
+    })
+    .catch(()=>{ toast('تعذّر الحذف — حاول مرة أخرى'); });
+}
+function refreshCompetitorsNow(){
+  toast('جارٍ تحديث بيانات المنافسين…');
+  api('/api/competitors/refresh', { method:'POST' })
+    .then(res=>{
+      toast(`تم فحص ${res.checked} منافساً، ونجح ${res.found} منهم`);
+      return api('/api/competitors');
+    })
+    .then(res=>{
+      STATE.competitors = res.entries;
+      const box = document.getElementById('competitorsBox');
+      if(box) box.innerHTML = competitorsBoxInnerHtml();
+      return loadStateFromServer();
+    })
+    .then(()=>{ if(currentHash().startsWith('#cells/')) router(); })
+    .catch(err=>{ toast((err && err.data && err.data.error) || err.message || 'تعذّر التحديث — حاول مرة أخرى.'); });
+}
+function renderCompetitorsExtra(){
+  if(STATE.competitors === null && !STATE.competitorsLoading) loadCompetitorsIntoState();
+  return `<div class="card card-pad" style="margin-bottom:14px" id="competitorsBox">${STATE.competitors ? competitorsBoxInnerHtml() : '<div class="empty">جارٍ التحميل…</div>'}</div>`;
+}
+
+/* ---------------- صفحة: المنتجات (كتالوج متزامن من أودو) ---------------- */
+function loadProductsIntoState(){
+  STATE.productsLoading = true;
+  api('/api/products')
+    .then(res=>{
+      STATE.products = res.products;
+      STATE.productsLoading = false;
+      const box = document.getElementById('productsBox');
+      if(box) box.innerHTML = productsGridHtml();
+    })
+    .catch(()=>{
+      STATE.productsLoading = false;
+      STATE.products = [];
+      const box = document.getElementById('productsBox');
+      if(box) box.innerHTML = productsGridHtml();
+    });
+}
+function productsGridHtml(){
+  const list = STATE.products || [];
+  if(!list.length){
+    const odoo = getRealIntegration('odoo');
+    const msg = odoo && odoo.status==='CONNECTED'
+      ? 'لم تتم مزامنة أي منتج بعد — جرّب المزامنة اليدوية من صفحة التكاملات (إدارة ربط أودو ← مزامنة الآن).'
+      : 'لا توجد منتجات بعد — اربط أودو من صفحة التكاملات لمزامنة كتالوج منتجاتك الحقيقي مع الصور والأسعار والكميات.';
+    return `<div class="card card-pad empty">${msg}</div>`;
+  }
+  return `<div class="grid g-3">
+    ${list.map(p=>`
+    <div class="card card-pad">
+      ${p.imageDataUrl
+        ? `<img src="${p.imageDataUrl}" alt="${escapeHtml(p.name)}" style="width:100%;height:120px;object-fit:contain;border-radius:10px;background:var(--surface-2);margin-bottom:10px" />`
+        : `<div style="width:100%;height:120px;border-radius:10px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:10px">${icon('inventory')}</div>`}
+      <div style="font-weight:700;font-size:13px;margin-bottom:4px">${escapeHtml(p.name)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${p.sku ? 'SKU: '+escapeHtml(p.sku) : '—'}</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:12px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">السعر</span><b class="num">${p.price}</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">الكمية المتاحة</span><b class="num">${p.qtyAvailable}</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">مبيعات آخر 30 يوماً</span><b class="num">${p.salesLast30}</b></div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+function renderProducts(){
+  if(STATE.products === null && !STATE.productsLoading) loadProductsIntoState();
+  return `
+    <div class="view-head">
+      <div><div class="eyebrow">الكتالوج المتزامن من نظام التشغيل المربوط</div><h1 class="view-title">المنتجات</h1>
+      <p class="view-sub">قائمة منتجاتك الحقيقية كما تصل من أودو — السعر، الكمية المتاحة، الصورة، ومبيعات آخر 30 يوماً — وتُستخدم نفس هذه البيانات لتغذية تحليل خلايا الأسعار والمخزون.</p></div>
+    </div>
+    <div id="productsBox">${STATE.products ? productsGridHtml() : '<div class="card card-pad empty">جارٍ التحميل…</div>'}</div>
+  `;
 }
 
 /* ---------------- صفحة: التنفيذ الآلي ---------------- */
@@ -1702,7 +1896,9 @@ function integrationCard(i){
   // التكاملات غير أودو ليس لها بعد خلفية ربط حقيقية في هذا الإصدار (بيانات
   // توضيحية فقط)، فالزر يوضّح ذلك صراحة بدل الإيحاء بأن الربط بدأ فعلاً.
   const btnOnclick = isReal
-    ? (connected ? `openOdooManageModal('${i.id}')` : `openOdooConnectModal('${i.id}')`)
+    ? (i.id==='marketsearch'
+        ? (connected ? `openMarketSearchManageModal()` : `openMarketSearchConnectModal()`)
+        : (connected ? `openOdooManageModal('${i.id}')` : `openOdooConnectModal('${i.id}')`))
     : `toast('ربط ${i.name} غير متاح بعد في هذا الإصدار — سيُضاف قريباً')`;
   return `
   <div class="card card-pad" style="margin-bottom:14px">
@@ -1757,12 +1953,25 @@ function renderIntegrationResults(){
   if(box) box.innerHTML = integrationResultsHtml(STATE.integrationSearch);
 }
 
+function connectedIntegrationsHtml(){
+  const connected = REAL_INTEGRATION_IDS
+    .map(id => ({ id, real: getRealIntegration(id) }))
+    .filter(x => x.real && x.real.status === 'CONNECTED')
+    .map(x => INTEGRATIONS.find(i => i.id === x.id))
+    .filter(Boolean);
+  if(!connected.length) return '';
+  return `
+    <div class="section-title"><span>${icon('link')} الربط الفعلي المتصل حالياً</span></div>
+    <div style="margin-bottom:18px">${connected.map(integrationCard).join('')}</div>
+  `;
+}
 function renderIntegrations(){
   return `
     <div class="view-head">
       <div><div class="eyebrow">مصادر بيانات خَلِيّة</div><h1 class="view-title">التكاملات</h1>
       <p class="view-sub">اذكر اسم المنصة التي ترغب بالربط معها لعرض حالتها، البيانات التي تقرأها، والعمليات التي تنفذها، مع شرح خطوات الربط.</p></div>
     </div>
+    <div id="connectedIntegrations">${connectedIntegrationsHtml()}</div>
     <div class="card card-pad" style="margin-bottom:16px">
       <div class="search" style="max-width:none;padding:11px 14px">
         ${icon('search')}
@@ -1837,7 +2046,8 @@ function saveOdooConnect(){
       if(idx>-1) STATE.serverIntegrations[idx] = res.integration;
       else (STATE.serverIntegrations=STATE.serverIntegrations||[]).push(res.integration);
       closeModal();
-      toast('تم الربط مع أودو بنجاح ✓ ' + describeCellSyncOutcomes(res.cellSyncOutcomes));
+      const nameNote = res.storeName ? (' وتم تحديث اسم المتجر إلى «' + res.storeName + '».') : '';
+      toast('تم الربط مع أودو بنجاح ✓ ' + describeCellSyncOutcomes(res.cellSyncOutcomes) + nameNote);
       return loadStateFromServer();
     })
     .then(()=>{ router(); })
@@ -1886,7 +2096,8 @@ function syncOdooNow(){
       const idx = (STATE.serverIntegrations||[]).findIndex(r=>r.providerId==='odoo');
       if(idx>-1) STATE.serverIntegrations[idx].lastSyncAt = new Date().toISOString();
       closeModal();
-      toast('تمت المزامنة ✓ ' + describeCellSyncOutcomes(res.outcomes));
+      const nameNote2 = res.storeName ? (' وتم تحديث اسم المتجر إلى «' + res.storeName + '».') : '';
+      toast('تمت المزامنة ✓ ' + describeCellSyncOutcomes(res.outcomes) + nameNote2);
       return loadStateFromServer();
     })
     .then(()=>{ router(); })
@@ -1906,7 +2117,92 @@ function disconnectOdoo(){
       if(idx>-1) STATE.serverIntegrations[idx] = res.integration;
       closeModal();
       toast('تم قطع الاتصال مع أودو');
-      if(currentHash()==='#integrations') renderIntegrationResults();
+      if(currentHash()==='#integrations'){ renderIntegrationResults(); const box=document.getElementById('connectedIntegrations'); if(box) box.innerHTML = connectedIntegrationsHtml(); }
+    })
+    .catch(()=>{ toast('تعذّر قطع الاتصال — حاول مرة أخرى'); });
+}
+
+/* ---------------- ربط رصد الأسعار والمنافسين (SerpApi) الفعلي ---------------- */
+function openMarketSearchConnectModal(){
+  openModal(`
+    <div style="font-weight:700;font-size:16px;margin-bottom:6px">ربط رصد الأسعار والمنافسين</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.9">
+      أنشئ حساباً مجانياً على serpapi.com، ثم انسخ مفتاح API من صفحة «Manage API Key» وألصقه هنا.
+      يُستخدم هذا المفتاح فقط لبحث أسعار المنافسين الذين تضيفهم من خلية «رصد وتحليل السوق».
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:5px">مفتاح SerpApi</div>
+        <input id="marketsearchApiKey" type="password" placeholder="••••••••••••" style="${INPUT_STYLE}" dir="ltr" autocomplete="off" />
+      </div>
+      <div id="marketsearchConnectError" style="display:none;font-size:12px;color:var(--risk-strong);background:var(--risk-soft);padding:9px 11px;border-radius:9px;line-height:1.8"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-primary btn-sm" id="marketsearchConnectBtn" onclick="saveMarketSearchConnect()">${icon('check')} ربط الآن</button>
+    </div>
+  `);
+}
+
+function saveMarketSearchConnect(){
+  const keyEl = document.getElementById('marketsearchApiKey');
+  const errEl = document.getElementById('marketsearchConnectError');
+  const btnEl = document.getElementById('marketsearchConnectBtn');
+
+  const apiKey = keyEl.value.trim();
+  if(!apiKey){
+    errEl.textContent = 'الرجاء إدخال مفتاح API قبل الربط.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  btnEl.disabled = true;
+  const originalLabel = btnEl.innerHTML;
+  btnEl.innerHTML = 'جارٍ التحقق من المفتاح…';
+
+  api('/api/integrations/marketsearch/connect', { method:'POST', body:{ config:{ apiKey } } })
+    .then(res=>{
+      const idx = (STATE.serverIntegrations||[]).findIndex(r=>r.providerId==='marketsearch');
+      if(idx>-1) STATE.serverIntegrations[idx] = res.integration;
+      else (STATE.serverIntegrations=STATE.serverIntegrations||[]).push(res.integration);
+      closeModal();
+      toast('تم الربط بنجاح ✓ يمكنك الآن إضافة منافسين من خلية «رصد وتحليل السوق»');
+      router();
+    })
+    .catch(err=>{
+      btnEl.disabled = false;
+      btnEl.innerHTML = originalLabel;
+      errEl.textContent = (err && err.data && err.data.error) || err.message || 'تعذّر التحقق من المفتاح — تأكد من صحته وحاول مرة أخرى.';
+      errEl.style.display = 'block';
+    });
+}
+
+function openMarketSearchManageModal(){
+  const real = getRealIntegration('marketsearch');
+  const connected = real && real.status==='CONNECTED';
+  openModal(`
+    <div style="font-weight:700;font-size:16px;margin-bottom:6px">إدارة ربط رصد الأسعار والمنافسين</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:16px;line-height:1.9">
+      ${connected ? 'الربط مفعّل حالياً، ويُستخدم كخيار احتياطي عند تعذّر جلب سعر منافس مباشرة من رابطه.' : 'الربط غير مفعّل حالياً.'}
+      لأسباب أمنية لا يمكن عرض المفتاح المحفوظ هنا — لتغييره اقطع الاتصال ثم أعد الربط بمفتاح جديد.
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">إغلاق</button>
+      <button class="btn btn-sm" style="background:var(--risk-soft);color:var(--risk-strong)" onclick="disconnectMarketSearch()">قطع الاتصال</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal(); openMarketSearchConnectModal();">${icon('link')} إعادة الربط بمفتاح جديد</button>
+    </div>
+  `);
+}
+
+function disconnectMarketSearch(){
+  api('/api/integrations/marketsearch', { method:'DELETE' })
+    .then(res=>{
+      const idx = (STATE.serverIntegrations||[]).findIndex(r=>r.providerId==='marketsearch');
+      if(idx>-1) STATE.serverIntegrations[idx] = res.integration;
+      closeModal();
+      toast('تم قطع الاتصال');
+      if(currentHash()==='#integrations'){ renderIntegrationResults(); const box=document.getElementById('connectedIntegrations'); if(box) box.innerHTML = connectedIntegrationsHtml(); }
     })
     .catch(()=>{ toast('تعذّر قطع الاتصال — حاول مرة أخرى'); });
 }
@@ -2181,10 +2477,10 @@ function deleteCellConfirmed(id){
 function getReports(){
   const fallback = [{l:'—',v:0}];
   return [
-    {id:'r1', name:'تقرير الربحية الشهري', desc:'صافي الربح، الهامش، وتكاليف كل قناة بيع.', chart:(CELL('profit')||{}).chart||fallback, color:'good'},
-    {id:'r2', name:'تقرير أداء الخلايا', desc:'درجة كل خلية وعدد القرارات التي قدّمتها هذا الشهر.', chart:CELLS.map(c=>({l:c.name.replace('خلية ',''), v:c.score})), color:'accent'},
-    {id:'r3', name:'تقرير المخزون', desc:'المنتجات المهددة بالنفاد والمنتجات الراكدة.', chart:(CELL('inventory')||{}).chart||fallback, color:'alert'},
-    {id:'r4', name:'تقرير الإعلانات', desc:'العائد على الإنفاق وتكلفة اكتساب العميل لكل حملة.', chart:(CELL('ads')||{}).chart||fallback, color:'risk'},
+    {id:'r1', name:'تقرير الربحية الشهري', desc:'صافي الربح، الهامش، وتكاليف كل قناة بيع.', chart:(CELL('profit')||{}).chart||fallback, color:'good', pdfUrl:'/api/reports/pdf?cellId=profit'},
+    {id:'r2', name:'تقرير أداء الخلايا', desc:'درجة كل خلية وعدد القرارات التي قدّمتها هذا الشهر.', chart:CELLS.map(c=>({l:c.name.replace('خلية ',''), v:c.score})), color:'accent', pdfUrl:'/api/reports/pdf'},
+    {id:'r3', name:'تقرير المخزون', desc:'المنتجات المهددة بالنفاد والمنتجات الراكدة.', chart:(CELL('inventory')||{}).chart||fallback, color:'alert', pdfUrl:'/api/reports/pdf?cellId=inventory'},
+    {id:'r4', name:'تقرير الإعلانات', desc:'العائد على الإنفاق وتكلفة اكتساب العميل لكل حملة.', chart:(CELL('ads')||{}).chart||fallback, color:'risk', pdfUrl:'/api/reports/pdf?cellId=ads'},
   ];
 }
 function cellReportCard(c){
@@ -2200,7 +2496,7 @@ function cellReportCard(c){
           <div style="font-size:11px;color:var(--muted)">${c.tagline}</div>
         </div>
       </div>
-      <span class="see-all" onclick="toast('ميزة تصدير التقارير كملف PDF قيد التطوير ولم تُفعّل بعد')">تصدير PDF</span>
+      <a class="see-all" href="/api/reports/pdf?cellId=${encodeURIComponent(c.slug)}" target="_blank" rel="noopener" style="text-decoration:none">تصدير PDF</a>
     </div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
       <div style="position:relative;width:56px;height:56px;flex:0 0 56px">${scoreRing(c.score,56,sc)}
@@ -2229,7 +2525,7 @@ function renderReports(){
     <div class="grid g-2" style="margin-bottom:20px">
       ${getReports().map(r=>`
       <div class="card card-pad">
-        <div class="section-title"><span>${r.name}</span><span class="see-all" onclick="toast('ميزة تصدير التقارير كملف PDF قيد التطوير ولم تُفعّل بعد')">تصدير PDF</span></div>
+        <div class="section-title"><span>${r.name}</span><a class="see-all" href="${r.pdfUrl}" target="_blank" rel="noopener" style="text-decoration:none">تصدير PDF</a></div>
         <p style="font-size:12.5px;color:var(--text-2);margin-bottom:12px">${r.desc}</p>
         ${barsChart(r.chart, r.color, 90)}
       </div>`).join('')}
@@ -2401,7 +2697,7 @@ function openDecisionModal(id){
 const ROUTES = {
   '#overview': renderOverview, '#leader': renderLeader, '#council': renderCouncil, '#meeting': renderMeeting, '#decisions': renderDecisions,
   '#cells': renderCellsGrid, '#automation': renderAutomation, '#integrations': renderIntegrations,
-  '#tasks': renderTasks, '#reports': renderReports, '#settings': renderSettings,
+  '#tasks': renderTasks, '#reports': renderReports, '#settings': renderSettings, '#products': renderProducts,
 };
 function router(){
   const hash = currentHash();

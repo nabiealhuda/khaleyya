@@ -3,17 +3,20 @@ import { withRoute, jsonError } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { decryptJson } from "@/lib/crypto";
 import { odooAuthenticate, parseOdooConfig } from "@/lib/integrations/odoo-client";
-import { syncOdooCells } from "@/lib/integrations/odoo-sync";
+import { syncOdooEverything } from "@/lib/integrations/odoo-sync";
 import { IntegrationConfigError } from "@/lib/integrations/types";
 
 /**
- * Re-pulls real data from the already-connected Odoo instance into the four
- * Odoo-backed cells (see odoo-sync.ts). Re-authenticates on every call
- * (cheap — one RPC round trip) rather than trusting a cached uid, since the
- * API key could have been revoked in Odoo since the last sync.
+ * Re-pulls real data from the already-connected Odoo instance: the
+ * Odoo-backed cells, the store's real name, the product catalog, and any
+ * new stagnant-product discount candidates (see odoo-sync.ts). Re-
+ * authenticates on every call (cheap — one RPC round trip) rather than
+ * trusting a cached uid, since the API key could have been revoked in Odoo
+ * since the last sync.
  *
- * Rate-limited low (5/min): this fans out into ~20 outbound Odoo RPC calls
- * per run (four cells × several aggregate queries each).
+ * Rate-limited low (5/min): this fans out into dozens of outbound Odoo RPC
+ * calls per run (five cells × several aggregate queries each, plus the
+ * product catalog pull).
  */
 export const POST = withRoute(
   async (_req, ctx) => {
@@ -43,14 +46,19 @@ export const POST = withRoute(
       throw err;
     }
 
-    const outcomes = await syncOdooCells(ctx.storeId, cfg, uid);
+    const result = await syncOdooEverything(ctx.storeId, cfg, uid);
 
     await prisma.integrationConnection.update({
       where: { id: connection.id },
       data: { status: "CONNECTED", lastSyncAt: new Date() },
     });
 
-    return NextResponse.json({ outcomes });
+    return NextResponse.json({
+      outcomes: result.cellOutcomes,
+      storeName: result.storeName,
+      productsSynced: result.products.count,
+      newPricingDecisions: result.newPricingDecisions,
+    });
   },
   { rateLimit: { limit: 5, windowMs: 60_000 } }
 );
